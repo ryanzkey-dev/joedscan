@@ -54,7 +54,7 @@ export default function BarcodeScannerModal({ onDetected, onClose }) {
           </button>
         </div>
 
-        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-black">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black">
           {error ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-white">
               <CameraOff size={32} />
@@ -64,7 +64,7 @@ export default function BarcodeScannerModal({ onDetected, onClose }) {
             <video ref={videoRef} className="h-full w-full object-cover" muted />
           )}
           {!error && (
-            <div className="pointer-events-none absolute inset-6 rounded-lg border-2 border-orange-400/80" />
+            <div className="pointer-events-none absolute inset-x-6 inset-y-[35%] rounded-lg border-2 border-orange-400/80" />
           )}
         </div>
 
