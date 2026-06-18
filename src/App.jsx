@@ -1,7 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ScanLine, CheckCircle2 } from 'lucide-react'
 import FormField from './components/FormField'
 import BarcodeScannerModal from './components/BarcodeScannerModal'
+import GeotagUpload from './components/GeotagUpload'
+import { haversineDistanceMeters } from './utils/haversine'
 
 const initialForm = {
   date: '',
@@ -29,6 +31,13 @@ const fieldLabels = {
 
 const scanFields = ['focPrefabSerial', 'modem', 'telset', 'iptvCcaNo']
 
+const initialGeotagging = {
+  start: { image: null, latitude: '', longitude: '', timestamp: '' },
+  end: { image: null, latitude: '', longitude: '', timestamp: '' },
+  distanceMeters: '',
+  distanceKilometers: '',
+}
+
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-gray-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
 
@@ -38,11 +47,40 @@ function App() {
   const [activeScanField, setActiveScanField] = useState(null)
   const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submittedData, setSubmittedData] = useState(null)
+  const [geotagging, setGeotagging] = useState(initialGeotagging)
 
   const handleChange = (field) => (e) => {
     const { value } = e.target
     setForm((prev) => ({ ...prev, [field]: value }))
   }
+
+  const updateGeotag = (key) => (data) => {
+    setGeotagging((prev) => ({ ...prev, [key]: data }))
+  }
+
+  useEffect(() => {
+    const { start, end } = geotagging
+    if (start.latitude && start.longitude && end.latitude && end.longitude) {
+      const meters = haversineDistanceMeters(
+        parseFloat(start.latitude),
+        parseFloat(start.longitude),
+        parseFloat(end.latitude),
+        parseFloat(end.longitude)
+      )
+      setGeotagging((prev) => ({
+        ...prev,
+        distanceMeters: meters.toFixed(2),
+        distanceKilometers: (meters / 1000).toFixed(3),
+      }))
+    } else {
+      setGeotagging((prev) => ({ ...prev, distanceMeters: '', distanceKilometers: '' }))
+    }
+  }, [
+    geotagging.start.latitude,
+    geotagging.start.longitude,
+    geotagging.end.latitude,
+    geotagging.end.longitude,
+  ])
 
   const handleBarcodeDetected = useCallback(
     (text) => {
@@ -90,6 +128,32 @@ function App() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="rounded-xl border border-gray-200 p-4">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Geotagging
+              </h2>
+              <div className="space-y-4">
+                <GeotagUpload
+                  label="Start Geotag Image"
+                  prefix="Start"
+                  value={geotagging.start}
+                  onChange={updateGeotag('start')}
+                />
+                <GeotagUpload
+                  label="End Geotag Image"
+                  prefix="End"
+                  value={geotagging.end}
+                  onChange={updateGeotag('end')}
+                />
+                {geotagging.distanceMeters && (
+                  <div className="rounded-lg bg-orange-50 p-3 text-sm font-medium text-orange-800">
+                    <p>Distance: {geotagging.distanceMeters} meters</p>
+                    <p>Equivalent: {geotagging.distanceKilometers} km</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <FormField label={fieldLabels.date} required error={errors.date}>
               <input
                 type="date"
@@ -176,6 +240,30 @@ function App() {
               Submitted Details
             </h2>
             <dl className="space-y-2 text-sm">
+              {geotagging.start.latitude && geotagging.start.longitude && (
+                <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt className="text-gray-500">Start Latitude / Longitude</dt>
+                  <dd className="font-medium text-gray-800">
+                    {geotagging.start.latitude}, {geotagging.start.longitude}
+                  </dd>
+                </div>
+              )}
+              {geotagging.end.latitude && geotagging.end.longitude && (
+                <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt className="text-gray-500">End Latitude / Longitude</dt>
+                  <dd className="font-medium text-gray-800">
+                    {geotagging.end.latitude}, {geotagging.end.longitude}
+                  </dd>
+                </div>
+              )}
+              {geotagging.distanceMeters && (
+                <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt className="text-gray-500">Distance</dt>
+                  <dd className="font-medium text-gray-800">
+                    {geotagging.distanceMeters} m ({geotagging.distanceKilometers} km)
+                  </dd>
+                </div>
+              )}
               {Object.keys(initialForm).map((field) => (
                 <div key={field} className="flex justify-between gap-4 border-b border-gray-100 pb-2">
                   <dt className="text-gray-500">{fieldLabels[field]}</dt>
