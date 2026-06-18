@@ -21,7 +21,7 @@ const fieldLabels = {
   projectId: 'Project ID',
   subscriber: 'Subscriber',
   address: 'Address',
-  focPrefabSerial: 'FOC Prefab Serial',
+  focPrefabSerial: 'FOC Traditional / Prefab Serial',
   modem: 'Modem',
   telset: 'Telset',
   iptvCcaNo: 'IPTV CCA No.',
