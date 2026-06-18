@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { gps as parseGps } from 'exifr'
-import { MapPin } from 'lucide-react'
+import Tesseract from 'tesseract.js'
+import { MapPin, Loader2 } from 'lucide-react'
+import { parseCoordinatesFromText } from '../utils/parseCoordinatesFromText'
 
 export default function GeotagUpload({ label, prefix, value, onChange }) {
   const [previewUrl, setPreviewUrl] = useState(null)
   const [status, setStatus] = useState('')
+  const [isReading, setIsReading] = useState(false)
 
   useEffect(() => {
     if (!value.image) {
@@ -21,6 +24,7 @@ export default function GeotagUpload({ label, prefix, value, onChange }) {
     if (!file) return
 
     setStatus('')
+    setIsReading(true)
     const timestamp = new Date().toLocaleString()
 
     try {
@@ -32,13 +36,34 @@ export default function GeotagUpload({ label, prefix, value, onChange }) {
           longitude: gpsData.longitude.toFixed(6),
           timestamp,
         })
+        setIsReading(false)
+        return
+      }
+    } catch {
+      // fall through to OCR
+    }
+
+    setStatus('No EXIF GPS found, reading coordinates from image text...')
+    try {
+      const { data } = await Tesseract.recognize(file, 'eng')
+      const coords = parseCoordinatesFromText(data.text)
+      if (coords) {
+        onChange({
+          image: file,
+          latitude: coords.latitude.toFixed(6),
+          longitude: coords.longitude.toFixed(6),
+          timestamp,
+        })
+        setStatus('Coordinates detected from image text overlay.')
       } else {
         setStatus('No GPS data found in this image.')
         onChange({ image: file, latitude: '', longitude: '', timestamp })
       }
     } catch {
-      setStatus('Unable to read image metadata.')
+      setStatus('Unable to read coordinates from this image.')
       onChange({ image: file, latitude: '', longitude: '', timestamp })
+    } finally {
+      setIsReading(false)
     }
   }
 
@@ -61,7 +86,14 @@ export default function GeotagUpload({ label, prefix, value, onChange }) {
         />
       )}
 
-      {status && <p className="mt-2 text-xs text-amber-600">{status}</p>}
+      {isReading && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
+          <Loader2 size={12} className="animate-spin" />
+          Reading location from image...
+        </p>
+      )}
+
+      {!isReading && status && <p className="mt-2 text-xs text-amber-600">{status}</p>}
 
       {value.latitude && value.longitude && (
         <dl className="mt-3 space-y-1 text-xs text-gray-600">
