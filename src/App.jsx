@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { ScanLine, CheckCircle2 } from 'lucide-react'
 import FormField from './components/FormField'
 import BarcodeScannerModal from './components/BarcodeScannerModal'
-import GeotagUpload from './components/GeotagUpload'
 import { haversineDistanceMeters } from './utils/haversine'
 
 const initialForm = {
@@ -32,8 +31,8 @@ const fieldLabels = {
 const scanFields = ['focPrefabSerial', 'modem', 'telset', 'iptvCcaNo']
 
 const initialGeotagging = {
-  start: { image: null, latitude: '', longitude: '', timestamp: '' },
-  end: { image: null, latitude: '', longitude: '', timestamp: '' },
+  start: { latitude: '', longitude: '' },
+  end: { latitude: '', longitude: '' },
   distanceMeters: '',
   distanceKilometers: '',
 }
@@ -54,8 +53,12 @@ function App() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const updateGeotag = (key) => (data) => {
-    setGeotagging((prev) => ({ ...prev, [key]: data }))
+  const updateGeotagField = (point, field) => (e) => {
+    const { value } = e.target
+    setGeotagging((prev) => ({
+      ...prev,
+      [point]: { ...prev[point], [field]: value },
+    }))
   }
 
   useEffect(() => {
@@ -133,18 +136,52 @@ function App() {
                 Geotagging
               </h2>
               <div className="space-y-4">
-                <GeotagUpload
-                  label="Start Geotag Image"
-                  prefix="Start"
-                  value={geotagging.start}
-                  onChange={updateGeotag('start')}
-                />
-                <GeotagUpload
-                  label="End Geotag Image"
-                  prefix="End"
-                  value={geotagging.end}
-                  onChange={updateGeotag('end')}
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Start Latitude">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={geotagging.start.latitude}
+                      onChange={updateGeotagField('start', 'latitude')}
+                      className={inputClasses}
+                      placeholder="9.763115"
+                    />
+                  </FormField>
+                  <FormField label="Start Longitude">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={geotagging.start.longitude}
+                      onChange={updateGeotagField('start', 'longitude')}
+                      className={inputClasses}
+                      placeholder="123.530931"
+                    />
+                  </FormField>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="End Latitude">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={geotagging.end.latitude}
+                      onChange={updateGeotagField('end', 'latitude')}
+                      className={inputClasses}
+                      placeholder="9.764000"
+                    />
+                  </FormField>
+                  <FormField label="End Longitude">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={geotagging.end.longitude}
+                      onChange={updateGeotagField('end', 'longitude')}
+                      className={inputClasses}
+                      placeholder="123.531500"
+                    />
+                  </FormField>
+                </div>
+
                 <FormField label="Geotagging Distance Result">
                   <input
                     type="text"
@@ -154,7 +191,7 @@ function App() {
                         ? `${geotagging.distanceMeters} meters  (${geotagging.distanceKilometers} km)`
                         : ''
                     }
-                    placeholder="Distance will appear after both geotags are uploaded"
+                    placeholder="Distance will appear after both latitude/longitude pairs are entered"
                     className={`${inputClasses} cursor-not-allowed bg-orange-50 font-medium text-orange-800`}
                   />
                 </FormField>
