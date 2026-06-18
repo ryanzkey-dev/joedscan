@@ -145,12 +145,19 @@ function App() {
                   value={geotagging.end}
                   onChange={updateGeotag('end')}
                 />
-                {geotagging.distanceMeters && (
-                  <div className="rounded-lg bg-orange-50 p-3 text-sm font-medium text-orange-800">
-                    <p>Distance: {geotagging.distanceMeters} meters</p>
-                    <p>Equivalent: {geotagging.distanceKilometers} km</p>
-                  </div>
-                )}
+                <FormField label="Geotagging Distance Result">
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      geotagging.distanceMeters
+                        ? `${geotagging.distanceMeters} meters  (${geotagging.distanceKilometers} km)`
+                        : ''
+                    }
+                    placeholder="Distance will appear after both geotags are uploaded"
+                    className={`${inputClasses} cursor-not-allowed bg-orange-50 font-medium text-orange-800`}
+                  />
+                </FormField>
               </div>
             </div>
 
