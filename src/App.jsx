@@ -4,12 +4,30 @@ import FormField from './components/FormField'
 import BarcodeScannerModal from './components/BarcodeScannerModal'
 
 const initialForm = {
-  firstName: '',
-  middleName: '',
-  lastName: '',
-  mobileNumber: '',
-  serialNumber: '',
+  date: '',
+  techNames: '',
+  projectId: '',
+  subscriber: '',
+  address: '',
+  focPrefabSerial: '',
+  modem: '',
+  telset: '',
+  iptvCcaNo: '',
 }
+
+const fieldLabels = {
+  date: 'Date',
+  techNames: 'Tech Names',
+  projectId: 'Project ID',
+  subscriber: 'Subscriber',
+  address: 'Address',
+  focPrefabSerial: 'FOC Prefab Serial',
+  modem: 'Modem',
+  telset: 'Telset',
+  iptvCcaNo: 'IPTV CCA No.',
+}
+
+const scanFields = ['focPrefabSerial', 'modem', 'telset', 'iptvCcaNo']
 
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-gray-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
@@ -17,31 +35,32 @@ const inputClasses =
 function App() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
-  const [isScannerOpen, setIsScannerOpen] = useState(false)
-  const [scanSuccess, setScanSuccess] = useState(false)
+  const [activeScanField, setActiveScanField] = useState(null)
+  const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submittedData, setSubmittedData] = useState(null)
 
   const handleChange = (field) => (e) => {
-    let { value } = e.target
-    if (field === 'mobileNumber') {
-      value = value.replace(/\D/g, '')
-    }
+    const { value } = e.target
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleBarcodeDetected = useCallback((text) => {
-    setForm((prev) => ({ ...prev, serialNumber: text }))
-    setIsScannerOpen(false)
-    setScanSuccess(true)
-    setTimeout(() => setScanSuccess(false), 3000)
-  }, [])
+  const handleBarcodeDetected = useCallback(
+    (text) => {
+      setForm((prev) => ({ ...prev, [activeScanField]: text }))
+      setScanSuccessField(activeScanField)
+      setActiveScanField(null)
+      setTimeout(() => setScanSuccessField(null), 3000)
+    },
+    [activeScanField]
+  )
 
   const validate = () => {
     const next = {}
-    if (!form.firstName.trim()) next.firstName = 'First name is required'
-    if (!form.lastName.trim()) next.lastName = 'Last name is required'
-    if (!form.mobileNumber.trim()) next.mobileNumber = 'Mobile number is required'
-    if (!form.serialNumber.trim()) next.serialNumber = 'Serial number is required'
+    Object.keys(initialForm).forEach((field) => {
+      if (!form[field].trim()) {
+        next[field] = `${fieldLabels[field]} is required`
+      }
+    })
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -63,7 +82,7 @@ function App() {
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-xl">
-          {scanSuccess && (
+          {scanSuccessField && (
             <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
               <CheckCircle2 size={18} />
               Serial barcode scanned successfully
@@ -71,66 +90,76 @@ function App() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="First Name" required error={errors.firstName}>
+            <FormField label={fieldLabels.date} required error={errors.date}>
+              <input
+                type="date"
+                value={form.date}
+                onChange={handleChange('date')}
+                className={inputClasses}
+              />
+            </FormField>
+
+            <FormField label={fieldLabels.techNames} required error={errors.techNames}>
               <input
                 type="text"
-                value={form.firstName}
-                onChange={handleChange('firstName')}
+                value={form.techNames}
+                onChange={handleChange('techNames')}
                 className={inputClasses}
-                placeholder="Juan"
+                placeholder="Juan Dela Cruz"
               />
             </FormField>
 
-            <FormField label="Middle Name">
+            <FormField label={fieldLabels.projectId} required error={errors.projectId}>
               <input
                 type="text"
-                value={form.middleName}
-                onChange={handleChange('middleName')}
+                value={form.projectId}
+                onChange={handleChange('projectId')}
                 className={inputClasses}
-                placeholder="Santos"
+                placeholder="PRJ-00123"
               />
             </FormField>
 
-            <FormField label="Last Name" required error={errors.lastName}>
+            <FormField label={fieldLabels.subscriber} required error={errors.subscriber}>
               <input
                 type="text"
-                value={form.lastName}
-                onChange={handleChange('lastName')}
+                value={form.subscriber}
+                onChange={handleChange('subscriber')}
                 className={inputClasses}
-                placeholder="Dela Cruz"
+                placeholder="Subscriber name"
               />
             </FormField>
 
-            <FormField label="Mobile Number" required error={errors.mobileNumber}>
+            <FormField label={fieldLabels.address} required error={errors.address}>
               <input
-                type="tel"
-                inputMode="numeric"
-                value={form.mobileNumber}
-                onChange={handleChange('mobileNumber')}
+                type="text"
+                value={form.address}
+                onChange={handleChange('address')}
                 className={inputClasses}
-                placeholder="09171234567"
+                placeholder="Installation address"
               />
             </FormField>
 
-            <FormField label="Serial Number" required error={errors.serialNumber}>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={form.serialNumber}
-                  onChange={handleChange('serialNumber')}
-                  className={inputClasses}
-                  placeholder="Scan or enter serial number"
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsScannerOpen(true)}
-                  className="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-orange-500 px-3.5 text-white shadow-sm transition hover:opacity-90"
-                  aria-label="Scan serial barcode"
-                >
-                  <ScanLine size={22} />
-                </button>
-              </div>
-            </FormField>
+            {scanFields.map((field) => (
+              <FormField key={field} label={fieldLabels[field]} required error={errors[field]}>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={form[field]}
+                    onChange={handleChange(field)}
+                    className={inputClasses}
+                    placeholder={`Scan or enter ${fieldLabels[field].toLowerCase()}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setActiveScanField(field)}
+                    className="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-orange-500 px-3.5 text-white shadow-sm transition hover:opacity-90"
+                    aria-label={`Scan ${fieldLabels[field]}`}
+                  >
+                    <ScanLine size={22} />
+                  </button>
+                </div>
+              </FormField>
+            ))}
 
             <button
               type="submit"
@@ -147,16 +176,10 @@ function App() {
               Submitted Details
             </h2>
             <dl className="space-y-2 text-sm">
-              {[
-                ['First Name', submittedData.firstName],
-                ['Middle Name', submittedData.middleName || '—'],
-                ['Last Name', submittedData.lastName],
-                ['Mobile Number', submittedData.mobileNumber],
-                ['Serial Number', submittedData.serialNumber],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4 border-b border-gray-100 pb-2">
-                  <dt className="text-gray-500">{label}</dt>
-                  <dd className="font-medium text-gray-800">{value}</dd>
+              {Object.keys(initialForm).map((field) => (
+                <div key={field} className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                  <dt className="text-gray-500">{fieldLabels[field]}</dt>
+                  <dd className="font-medium text-gray-800">{submittedData[field]}</dd>
                 </div>
               ))}
             </dl>
@@ -164,10 +187,10 @@ function App() {
         )}
       </div>
 
-      {isScannerOpen && (
+      {activeScanField && (
         <BarcodeScannerModal
           onDetected={handleBarcodeDetected}
-          onClose={() => setIsScannerOpen(false)}
+          onClose={() => setActiveScanField(null)}
         />
       )}
     </div>
