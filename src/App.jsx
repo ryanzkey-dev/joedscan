@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ScanLine, CheckCircle2 } from 'lucide-react'
+import { ScanLine, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import FormField from './components/FormField'
 import BarcodeScannerModal from './components/BarcodeScannerModal'
 import { haversineDistanceMeters } from './utils/haversine'
+import { submitToSheet } from './utils/submitToSheet'
 
 const initialForm = {
   date: '',
@@ -47,6 +48,8 @@ function App() {
   const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submittedData, setSubmittedData] = useState(null)
   const [geotagging, setGeotagging] = useState(initialGeotagging)
+  const [submitStatus, setSubmitStatus] = useState('idle')
+  const [submitError, setSubmitError] = useState('')
 
   const handleChange = (field) => (e) => {
     const { value } = e.target
@@ -106,10 +109,29 @@ function App() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    setSubmittedData(form)
+
+    setSubmitStatus('submitting')
+    setSubmitError('')
+
+    try {
+      await submitToSheet({
+        ...form,
+        startLatitude: geotagging.start.latitude,
+        startLongitude: geotagging.start.longitude,
+        endLatitude: geotagging.end.latitude,
+        endLongitude: geotagging.end.longitude,
+        distanceMeters: geotagging.distanceMeters,
+        distanceKilometers: geotagging.distanceKilometers,
+      })
+      setSubmittedData(form)
+      setSubmitStatus('success')
+    } catch (err) {
+      setSubmitStatus('error')
+      setSubmitError(err.message)
+    }
   }
 
   return (
@@ -127,6 +149,20 @@ function App() {
             <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
               <CheckCircle2 size={18} />
               Serial barcode scanned successfully
+            </div>
+          )}
+
+          {submitStatus === 'success' && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+              <CheckCircle2 size={18} />
+              Submitted to Google Sheet successfully
+            </div>
+          )}
+
+          {submitStatus === 'error' && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              <AlertCircle size={18} />
+              {submitError}
             </div>
           )}
 
@@ -271,9 +307,11 @@ function App() {
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-3 font-semibold text-white shadow-md transition hover:opacity-90"
+              disabled={submitStatus === 'submitting'}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-3 font-semibold text-white shadow-md transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Submit Form
+              {submitStatus === 'submitting' && <Loader2 size={18} className="animate-spin" />}
+              {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Form'}
             </button>
           </form>
         </div>

@@ -2,6 +2,12 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Google Sheets submission
+
+Form submissions are sent to a Google Sheet via a Google Apps Script Web App. See
+[google-apps-script/README.md](google-apps-script/README.md) for setup steps, then set
+`VITE_SHEET_WEBAPP_URL` in a local `.env` file (see `.env.example`).
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
