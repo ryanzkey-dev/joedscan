@@ -19,4 +19,28 @@ This form submits data to your Google Sheet via a Google Apps Script Web App
    ```
 7. Restart `npm run dev` so Vite picks up the new env variable.
 
-Every form submission appends one row to `Sheet1`, adding a header row automatically on first run.
+Every form submission appends one row to `Sheet1`, adding a header row automatically only if the
+sheet is empty (your sheet already has its header row, so this won't run).
+
+## Column mapping
+
+`Sheet1` has 39 columns (A–AM) that predate this form and cover a wider installation
+report than what the form collects. The script writes into the existing layout exactly,
+leaving columns the form doesn't collect blank:
+
+| Column | Header | Source |
+| --- | --- | --- |
+| C | UPLOADED GEOTAGGING | Summary string built from Start/End lat-lng + distance |
+| I | DATE | Date field |
+| J | TECH NAMES | Tech Names field |
+| L | PROJECT ID | Project ID field |
+| P | SUBSCRIBER | Subscriber field |
+| Q | ADDRESS | Address field |
+| V | FOC PREFAB SERIAL | FOC Traditional / Prefab Serial field |
+| W | MODEM | Modem field |
+| X | TELSET | Telset field |
+| Y | IPTV CCA NO | IPTV CCA No. field |
+
+All other columns (TMS, OFSC, REMARKS 2/3, MONTH, SO TYPE, SO VOICE/DATA/IPTV, CBR, TEL,
+EXCHANGED, CPE STATUS, CAFAC, MHB, IOO, PATCH, OJB, CABLE TIE, FCLIP, FCLAMP, FIC, SPAN,
+METER START/END/CONSUME, FOC TYPE) are left blank since the form doesn't capture them yet.
