@@ -1,26 +1,49 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
-import { X, CameraOff } from 'lucide-react'
+import { X, CameraOff, Flashlight, FlashlightOff, ZoomIn } from 'lucide-react'
+
+const SCAN_CONSTRAINTS = {
+  video: {
+    facingMode: { ideal: 'environment' },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+    focusMode: 'continuous',
+    advanced: [{ focusMode: 'continuous' }],
+  },
+}
 
 export default function BarcodeScannerModal({ onDetected, onClose }) {
   const videoRef = useRef(null)
+  const controlsRef = useRef(null)
   const [error, setError] = useState('')
+  const [torchOn, setTorchOn] = useState(false)
+  const [torchSupported, setTorchSupported] = useState(false)
+  const [zoom, setZoom] = useState(null)
+  const [zoomRange, setZoomRange] = useState(null)
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader()
     let cancelled = false
-    let controls
 
     reader
-      .decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+      .decodeFromConstraints(SCAN_CONSTRAINTS, videoRef.current, (result) => {
         if (cancelled || !result) return
         onDetected(result.getText())
       })
-      .then((c) => {
+      .then((controls) => {
         if (cancelled) {
-          c.stop()
-        } else {
-          controls = c
+          controls.stop()
+          return
+        }
+        controlsRef.current = controls
+
+        const capabilities = controls.streamVideoCapabilitiesGet?.(() => true)
+        if (capabilities?.torch) {
+          setTorchSupported(true)
+        }
+        if (capabilities?.zoom && typeof capabilities.zoom === 'object') {
+          setZoomRange(capabilities.zoom)
+          setZoom(capabilities.zoom.min)
         }
       })
       .catch((err) => {
@@ -35,9 +58,25 @@ export default function BarcodeScannerModal({ onDetected, onClose }) {
 
     return () => {
       cancelled = true
-      controls?.stop()
+      controlsRef.current?.stop()
     }
   }, [onDetected])
+
+  const toggleTorch = async () => {
+    const next = !torchOn
+    try {
+      await controlsRef.current?.switchTorch?.(next)
+      setTorchOn(next)
+    } catch {
+      setTorchSupported(false)
+    }
+  }
+
+  const handleZoomChange = (e) => {
+    const value = Number(e.target.value)
+    setZoom(value)
+    controlsRef.current?.streamVideoConstraintsApply?.({ advanced: [{ zoom: value }] })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -61,15 +100,42 @@ export default function BarcodeScannerModal({ onDetected, onClose }) {
               <p>{error}</p>
             </div>
           ) : (
-            <video ref={videoRef} className="h-full w-full object-cover" muted />
+            <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
           )}
+
           {!error && (
             <div className="pointer-events-none absolute inset-6 rounded-lg border-2 border-orange-400/80" />
           )}
+
+          {!error && torchSupported && (
+            <button
+              type="button"
+              onClick={toggleTorch}
+              className="absolute right-3 top-3 flex items-center justify-center rounded-full bg-black/50 p-2 text-white"
+              aria-label="Toggle flashlight"
+            >
+              {torchOn ? <FlashlightOff size={18} /> : <Flashlight size={18} />}
+            </button>
+          )}
         </div>
 
+        {!error && zoomRange && (
+          <div className="mt-3 flex items-center gap-2">
+            <ZoomIn size={16} className="shrink-0 text-gray-500" />
+            <input
+              type="range"
+              min={zoomRange.min}
+              max={zoomRange.max}
+              step={zoomRange.step || 0.1}
+              value={zoom ?? zoomRange.min}
+              onChange={handleZoomChange}
+              className="w-full accent-orange-500"
+            />
+          </div>
+        )}
+
         <p className="mt-3 text-center text-sm text-gray-500">
-          Point the camera at the serial barcode
+          Align the barcode inside the box and hold steady.
         </p>
 
         <button
