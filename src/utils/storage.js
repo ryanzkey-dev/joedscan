@@ -7,7 +7,12 @@ const KEYS = {
   subscribers: 'subscribers',
   materials: 'materials',
   loggedInUser: 'loggedInUser',
+  dataVersion: 'dataVersion',
 }
+
+// Bump this whenever a data-shape change should auto-reset existing
+// localStorage instead of requiring users to manually clear it.
+const CURRENT_DATA_VERSION = 2
 
 function read(key, fallback) {
   try {
@@ -165,8 +170,17 @@ export function deleteMaterial(id) {
 }
 
 export function seedInitialData() {
-  const users = getUsers()
-  if (users.length > 0) return
+  const storedVersion = Number(localStorage.getItem(KEYS.dataVersion) || 0)
 
-  saveUsers([DEFAULT_ADMIN])
+  if (storedVersion !== CURRENT_DATA_VERSION) {
+    Object.values(KEYS).forEach((key) => localStorage.removeItem(key))
+    saveUsers([DEFAULT_ADMIN])
+    localStorage.setItem(KEYS.dataVersion, String(CURRENT_DATA_VERSION))
+    return
+  }
+
+  const users = getUsers()
+  if (users.length === 0) {
+    saveUsers([DEFAULT_ADMIN])
+  }
 }
