@@ -7,14 +7,18 @@ import {
   ClipboardList,
   LogOut,
   FileText,
+  Send,
+  Wrench,
   X,
 } from 'lucide-react'
 
 const ADMIN_MENU = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
-  { label: 'Add Technician', to: '/admin/add-technician', icon: UserPlus },
   { label: 'Subscribers', to: '/admin/subscribers', icon: Users },
+  { label: 'Dispatch', to: '/admin/dispatch', icon: Send },
+  { label: 'Repair', to: '/admin/repair', icon: Wrench },
   { label: 'Inventory / Materials', to: '/admin/inventory', icon: Package },
+  { label: 'Add Technician', to: '/admin/add-technician', icon: UserPlus },
   { label: 'Transactions', to: '/admin/transactions', icon: ClipboardList },
 ]
 
@@ -22,6 +26,8 @@ const TECH_MENU = [
   { label: 'Dashboard', to: '/technician', icon: LayoutDashboard, end: true },
   { label: 'Form', to: '/technician/form', icon: FileText },
   { label: 'My Encoded Records', to: '/technician/records', icon: ClipboardList },
+  { label: 'Assigned Job Orders', to: '/technician/assigned-job-orders', icon: Send },
+  { label: 'Assigned Repairs', to: '/technician/assigned-repairs', icon: Wrench },
 ]
 
 export default function Sidebar({ role, isOpen, onClose, onLogout }) {

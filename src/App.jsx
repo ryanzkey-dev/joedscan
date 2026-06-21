@@ -8,11 +8,15 @@ import Login from './pages/Login'
 import AdminOverview from './pages/admin/AdminOverview'
 import AddTechnician from './pages/admin/AddTechnician'
 import Subscribers from './pages/admin/Subscribers'
+import Dispatch from './pages/admin/Dispatch'
+import Repair from './pages/admin/Repair'
 import Inventory from './pages/admin/Inventory'
 import Transactions from './pages/admin/Transactions'
 import TechnicianDashboard from './pages/technician/TechnicianDashboard'
 import TechnicianForm from './pages/technician/TechnicianForm'
 import MyEncodedRecords from './pages/technician/MyEncodedRecords'
+import AssignedJobOrders from './pages/technician/AssignedJobOrders'
+import AssignedRepairs from './pages/technician/AssignedRepairs'
 
 function HomeRedirect() {
   const { user } = useAuth()
@@ -55,6 +59,26 @@ function App() {
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
                     <Subscribers />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dispatch"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <Dispatch />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/repair"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <Repair />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -106,6 +130,27 @@ function App() {
                 <ProtectedRoute role="technician">
                   <DashboardLayout>
                     <MyEncodedRecords />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/technician/assigned-job-orders"
+              element={
+                <ProtectedRoute role="technician">
+                  <DashboardLayout>
+                    <AssignedJobOrders />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/assigned-repairs"
+              element={
+                <ProtectedRoute role="technician">
+                  <DashboardLayout>
+                    <AssignedRepairs />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

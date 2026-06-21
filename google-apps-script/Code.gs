@@ -238,6 +238,10 @@ function updateTransactionStatus(data) {
 function doPost(e) {
   const data = JSON.parse(e.postData.contents)
 
+  if (data.action) {
+    return routeDispatchRepairAction(data.action, data)
+  }
+
   if (data.formType === 'technician') {
     return saveTechnician(data)
   }

@@ -15,6 +15,42 @@ the browser's `localStorage`.
 - **`Sheet1`** — the pre-existing 39-column legacy installer report (see "Column mapping" below).
   The app writes to it alongside `Transactions` on every encoding form submission, but never reads
   from it — it's kept for the business's existing report, not for the dashboard.
+- **`JobOrders`** — created when an admin assigns a Pending subscriber (from `Transactions`) to a
+  technician via Dispatch. Auto-created with headers on first write.
+- **`RepairTickets`** — created via the admin Repair page's "Add Repair Ticket" form. Auto-created
+  with headers on first write.
+- **`ActivityLogs`** — append-only audit trail for job order / repair ticket create, assign, move,
+  and status-change events. Auto-created with headers on first write.
+
+## Dispatch / Repair API actions
+
+These go through `doPost` like everything else, but are routed by an `action` field (in
+[DispatchRepair.gs](DispatchRepair.gs)) rather than the older `formType` convention, and are kept
+in a separate file so `Code.gs` itself only needed a 3-line change (an `if (data.action)` check at
+the top of `doPost`). When pasting into the Apps Script editor, this needs to be a **second script
+file** (File → New → Script, name it `DispatchRepair`) alongside `Code.gs` — Apps Script merges
+all files in a project into one shared scope, so no imports are needed.
+
+| Action | Purpose |
+| --- | --- |
+| `getPendingSubscribers` | Transactions where `status = Pending`, shaped for the Dispatch table |
+| `getTechnicians` | All technician accounts (for the assign/move dropdown) |
+| `createJobOrder` | Creates a JobOrders row, sets the source transaction's status to `Dispatched` |
+| `getJobOrders` | All job orders (admin Dispatch page) |
+| `getTechnicianJobOrders` | Job orders where `assignedTechnicianId` matches |
+| `updateJobOrderStatus` | Technician sets `In Progress` / `Completed` |
+| `moveJobOrderTechnician` | Admin reassigns a job order to a different technician |
+| `addRepairTicket` | Creates a RepairTickets row, status defaults to `Pending` |
+| `getRepairTickets` | All repair tickets (admin Repair page) |
+| `getTechnicianRepairTickets` | Repair tickets where `assignedTechnicianId` matches |
+| `dispatchRepairTicket` | Assigns a technician, sets status to `Dispatched` |
+| `moveRepairTicketTechnician` | Admin reassigns a repair ticket to a different technician |
+| `updateRepairStatus` | Admin or technician updates status |
+
+**Known limitation**: `JobOrders.mobileNumber` is always blank when sourced from Dispatch, because
+the `Transactions` sheet that pending subscribers come from has no Mobile Number column (it was
+replaced by Project ID/FOC Serial/Modem/etc. in an earlier rework). Repair tickets are unaffected
+since the admin types the mobile number directly into that form.
 
 ## Setup
 

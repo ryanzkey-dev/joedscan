@@ -72,3 +72,26 @@ export function createTransaction(record) {
 export function updateTransactionStatus(id, status) {
   return postToSheet({ formType: 'updateStatus', id, status })
 }
+
+// Generic action-routed call for Dispatch/Repair (and any future module that
+// follows the { action, ...params } convention on the backend).
+export async function apiRequest(action, params = {}) {
+  const url = requireUrl()
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, ...params }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to reach Google Sheet.')
+  }
+
+  const result = await response.json()
+  if (result.status !== 'success' && result.status !== 'ok') {
+    throw new Error(result.message || 'Google Sheet rejected the request.')
+  }
+
+  return result
+}
