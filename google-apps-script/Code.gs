@@ -73,7 +73,6 @@ function getOrCreateSheet(name, headers) {
 }
 
 function saveTechnician(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet()
   const sheet = getOrCreateSheet(TECHNICIAN_SHEET_NAME, TECHNICIAN_HEADERS)
 
   sheet.appendRow([
@@ -84,17 +83,9 @@ function saveTechnician(data) {
     data.createdAt || new Date().toISOString(),
   ])
 
-  return ContentService.createTextOutput(
-    JSON.stringify({
-      status: 'success',
-      debug: {
-        spreadsheetId: ss.getId(),
-        spreadsheetUrl: ss.getUrl(),
-        sheetNames: ss.getSheets().map((s) => s.getName()),
-        technicianSheetLastRow: sheet.getLastRow(),
-      },
-    })
-  ).setMimeType(ContentService.MimeType.JSON)
+  return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(
+    ContentService.MimeType.JSON
+  )
 }
 
 function saveInstallerRecord(data) {
