@@ -36,10 +36,6 @@ export default function Subscribers() {
     { key: 'address', label: 'Address' },
     { key: 'technicianName', label: 'Technician' },
     { key: 'focPrefabSerial', label: 'Serial Number' },
-    { key: 'startLatitude', label: 'Start Latitude' },
-    { key: 'startLongitude', label: 'Start Longitude' },
-    { key: 'endLatitude', label: 'End Latitude' },
-    { key: 'endLongitude', label: 'End Longitude' },
     { key: 'distanceMeters', label: 'Distance (m)' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
