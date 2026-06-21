@@ -20,12 +20,11 @@ export default function Subscribers() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return subscribers.filter((s) => {
-      const fullName = [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').toLowerCase()
       const matchesSearch =
         !term ||
-        fullName.includes(term) ||
-        s.mobileNumber?.toLowerCase().includes(term) ||
-        s.serialNumber?.toLowerCase().includes(term) ||
+        s.subscriber?.toLowerCase().includes(term) ||
+        s.focPrefabSerial?.toLowerCase().includes(term) ||
+        s.modem?.toLowerCase().includes(term) ||
         s.technicianName?.toLowerCase().includes(term)
       const matchesTechnician = technicianFilter === 'All' || s.technicianId === technicianFilter
       const matchesStatus = statusFilter === 'All' || s.status === statusFilter
@@ -35,13 +34,10 @@ export default function Subscribers() {
 
   const columns = [
     { key: 'id', label: 'Subscriber ID' },
-    { key: 'firstName', label: 'First Name' },
-    { key: 'middleName', label: 'Middle Name', render: (row) => row.middleName || '—' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'mobileNumber', label: 'Mobile Number' },
+    { key: 'subscriber', label: 'Subscriber' },
     { key: 'address', label: 'Address' },
     { key: 'technicianName', label: 'Technician' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'focPrefabSerial', label: 'Serial Number' },
     { key: 'startLatitude', label: 'Start Latitude' },
     { key: 'startLongitude', label: 'Start Longitude' },
     { key: 'endLatitude', label: 'End Latitude' },
@@ -80,7 +76,7 @@ export default function Subscribers() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, mobile, serial, or technician"
+            placeholder="Search by subscriber, serial, or technician"
             className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
           />
         </div>

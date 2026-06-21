@@ -16,27 +16,20 @@ export default function MyEncodedRecords() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     if (!term) return myTransactions
-    return myTransactions.filter((t) => {
-      const fullName = [t.firstName, t.middleName, t.lastName].filter(Boolean).join(' ').toLowerCase()
-      return (
-        fullName.includes(term) ||
-        t.mobileNumber?.toLowerCase().includes(term) ||
-        t.serialNumber?.toLowerCase().includes(term)
-      )
-    })
+    return myTransactions.filter(
+      (t) =>
+        t.subscriber?.toLowerCase().includes(term) ||
+        t.focPrefabSerial?.toLowerCase().includes(term) ||
+        t.modem?.toLowerCase().includes(term)
+    )
   }, [myTransactions, search])
 
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   const columns = [
     { key: 'id', label: 'Transaction ID' },
-    {
-      key: 'subscriber',
-      label: 'Subscriber Name',
-      render: (row) => [row.firstName, row.lastName].filter(Boolean).join(' '),
-    },
-    { key: 'mobileNumber', label: 'Mobile Number' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'subscriber', label: 'Subscriber Name' },
+    { key: 'focPrefabSerial', label: 'Serial Number' },
     {
       key: 'distance',
       label: 'Distance (m)',
@@ -74,7 +67,7 @@ export default function MyEncodedRecords() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, mobile number, or serial number"
+          placeholder="Search by subscriber, serial, or modem number"
           className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
         />
       </div>

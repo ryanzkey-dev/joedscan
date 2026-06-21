@@ -63,13 +63,8 @@ export default function AdminOverview() {
   const columns = [
     { key: 'id', label: 'Transaction ID' },
     { key: 'technicianName', label: 'Technician' },
-    {
-      key: 'subscriber',
-      label: 'Subscriber',
-      render: (row) => [row.firstName, row.lastName].filter(Boolean).join(' '),
-    },
-    { key: 'mobileNumber', label: 'Mobile Number' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'subscriber', label: 'Subscriber' },
+    { key: 'focPrefabSerial', label: 'Serial Number' },
     {
       key: 'distance',
       label: 'Distance (m)',

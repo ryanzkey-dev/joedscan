@@ -1,4 +1,4 @@
-import { X, Image as ImageIcon } from 'lucide-react'
+import { X } from 'lucide-react'
 import StatusBadge from '../Tables/StatusBadge'
 
 const STATUS_OPTIONS = ['Pending', 'For Review', 'Completed', 'Rejected']
@@ -37,58 +37,49 @@ export default function ViewTransactionModal({ transaction, onClose, onStatusCha
             <h4 className="mb-1.5 text-xs font-semibold uppercase text-gray-400">
               Subscriber Information
             </h4>
-            <p className="text-gray-700">
-              {[transaction.firstName, transaction.middleName, transaction.lastName]
-                .filter(Boolean)
-                .join(' ')}
-            </p>
-            <p className="text-gray-500">{transaction.mobileNumber}</p>
+            <p className="text-gray-700">{transaction.subscriber}</p>
             <p className="text-gray-500">{transaction.address}</p>
+            <p className="text-gray-500">Project ID: {transaction.projectId}</p>
           </section>
 
           <section>
             <h4 className="mb-1.5 text-xs font-semibold uppercase text-gray-400">
-              Serial Barcode
+              Serial Barcodes
             </h4>
-            <p className="font-mono text-gray-700">{transaction.serialNumber}</p>
+            <dl className="grid grid-cols-2 gap-2 text-gray-700">
+              <div>
+                <dt className="text-xs text-gray-400">FOC Traditional / Prefab Serial</dt>
+                <dd className="font-mono">{transaction.focPrefabSerial}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-gray-400">Modem</dt>
+                <dd className="font-mono">{transaction.modem}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-gray-400">Telset</dt>
+                <dd className="font-mono">{transaction.telset}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-gray-400">IPTV CCA No.</dt>
+                <dd className="font-mono">{transaction.iptvCcaNo}</dd>
+              </div>
+            </dl>
           </section>
 
           <section>
             <h4 className="mb-1.5 text-xs font-semibold uppercase text-gray-400">
               Geotagging
             </h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 text-gray-700">
               <div>
-                <p className="mb-1 text-xs font-medium text-gray-500">Start</p>
-                {geotagging?.start?.imagePreview ? (
-                  <img
-                    src={geotagging.start.imagePreview}
-                    alt="Start geotag"
-                    className="h-28 w-full rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="flex h-28 w-full items-center justify-center rounded-lg bg-gray-100 text-gray-300">
-                    <ImageIcon size={24} />
-                  </div>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="text-xs font-medium text-gray-500">Start</p>
+                <p>
                   {geotagging?.start?.latitude}, {geotagging?.start?.longitude}
                 </p>
               </div>
               <div>
-                <p className="mb-1 text-xs font-medium text-gray-500">End</p>
-                {geotagging?.end?.imagePreview ? (
-                  <img
-                    src={geotagging.end.imagePreview}
-                    alt="End geotag"
-                    className="h-28 w-full rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="flex h-28 w-full items-center justify-center rounded-lg bg-gray-100 text-gray-300">
-                    <ImageIcon size={24} />
-                  </div>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="text-xs font-medium text-gray-500">End</p>
+                <p>
                   {geotagging?.end?.latitude}, {geotagging?.end?.longitude}
                 </p>
               </div>

@@ -90,28 +90,31 @@ export function addTransaction(payload) {
     id: transactionId,
     technicianId: payload.technicianId,
     technicianName: payload.technicianName,
-    firstName: payload.firstName,
-    middleName: payload.middleName,
-    lastName: payload.lastName,
-    mobileNumber: payload.mobileNumber,
+    date: payload.date,
+    projectId: payload.projectId,
+    subscriber: payload.subscriber,
     address: payload.address,
-    serialNumber: payload.serialNumber,
+    focPrefabSerial: payload.focPrefabSerial,
+    modem: payload.modem,
+    telset: payload.telset,
+    iptvCcaNo: payload.iptvCcaNo,
     geotagging: payload.geotagging,
     status: 'Pending',
     createdAt,
   }
 
-  const subscriber = {
+  const subscriberRecord = {
     id: subscriberId,
     transactionId,
-    firstName: payload.firstName,
-    middleName: payload.middleName,
-    lastName: payload.lastName,
-    mobileNumber: payload.mobileNumber,
+    subscriber: payload.subscriber,
     address: payload.address,
     technicianId: payload.technicianId,
     technicianName: payload.technicianName,
-    serialNumber: payload.serialNumber,
+    projectId: payload.projectId,
+    focPrefabSerial: payload.focPrefabSerial,
+    modem: payload.modem,
+    telset: payload.telset,
+    iptvCcaNo: payload.iptvCcaNo,
     startLatitude: payload.geotagging.start.latitude,
     startLongitude: payload.geotagging.start.longitude,
     endLatitude: payload.geotagging.end.latitude,
@@ -122,7 +125,7 @@ export function addTransaction(payload) {
   }
 
   saveTransactions([...transactions, transaction])
-  saveSubscribers([...subscribers, subscriber])
+  saveSubscribers([...subscribers, subscriberRecord])
 
   return transaction
 }
@@ -169,25 +172,25 @@ export function deleteMaterial(id) {
 
 function seedSampleData(technicians) {
   const statuses = ['Pending', 'For Review', 'Completed', 'Rejected']
-  const sampleNames = [
-    ['Juan', 'Dela Cruz'],
-    ['Maria', 'Santos'],
-    ['Pedro', 'Reyes'],
-    ['Ana', 'Garcia'],
-    ['Jose', 'Ramos'],
-    ['Liza', 'Torres'],
-    ['Mark', 'Cruz'],
-    ['Grace', 'Lim'],
-    ['Paolo', 'Fernandez'],
-    ['Rosa', 'Aquino'],
-    ['Ben', 'Castillo'],
-    ['Nina', 'Bautista'],
+  const sampleSubscribers = [
+    'Juan Dela Cruz',
+    'Maria Santos',
+    'Pedro Reyes',
+    'Ana Garcia',
+    'Jose Ramos',
+    'Liza Torres',
+    'Mark Cruz',
+    'Grace Lim',
+    'Paolo Fernandez',
+    'Rosa Aquino',
+    'Ben Castillo',
+    'Nina Bautista',
   ]
 
   const transactions = []
   const subscribers = []
 
-  sampleNames.forEach(([first, last], index) => {
+  sampleSubscribers.forEach((subscriberName, index) => {
     const tech = technicians[index % technicians.length]
     const daysAgo = Math.floor(index / 2)
     const createdAt = daysAgoIso(daysAgo)
@@ -202,22 +205,31 @@ function seedSampleData(technicians) {
     const distanceKilometers = (distanceMeters / 1000).toFixed(3)
 
     const geotagging = {
-      start: { imagePreview: '', latitude: startLat, longitude: startLon, timestamp: createdAt },
-      end: { imagePreview: '', latitude: endLat, longitude: endLon, timestamp: createdAt },
+      start: { latitude: startLat, longitude: startLon },
+      end: { latitude: endLat, longitude: endLon },
       distanceMeters,
       distanceKilometers,
     }
+
+    const focPrefabSerial = `FOC-${1000 + index}`
+    const modem = `MDM-${2000 + index}`
+    const telset = `TEL-${3000 + index}`
+    const iptvCcaNo = `CCA-${4000 + index}`
+    const projectId = `PRJ-${100 + index}`
+    const address = `${index + 1} Sample St., Demo City`
 
     transactions.push({
       id: transactionId,
       technicianId: tech.id,
       technicianName: tech.fullName,
-      firstName: first,
-      middleName: '',
-      lastName: last,
-      mobileNumber: `0917${String(1000000 + index).slice(-7)}`,
-      address: `${index + 1} Sample St., Demo City`,
-      serialNumber: `SN-${1000 + index}`,
+      date: createdAt.slice(0, 10),
+      projectId,
+      subscriber: subscriberName,
+      address,
+      focPrefabSerial,
+      modem,
+      telset,
+      iptvCcaNo,
       geotagging,
       status,
       createdAt,
@@ -226,14 +238,15 @@ function seedSampleData(technicians) {
     subscribers.push({
       id: subscriberId,
       transactionId,
-      firstName: first,
-      middleName: '',
-      lastName: last,
-      mobileNumber: `0917${String(1000000 + index).slice(-7)}`,
-      address: `${index + 1} Sample St., Demo City`,
+      subscriber: subscriberName,
+      address,
       technicianId: tech.id,
       technicianName: tech.fullName,
-      serialNumber: `SN-${1000 + index}`,
+      projectId,
+      focPrefabSerial,
+      modem,
+      telset,
+      iptvCcaNo,
       startLatitude: startLat,
       startLongitude: startLon,
       endLatitude: endLat,

@@ -3,24 +3,37 @@ import { useNavigate } from 'react-router-dom'
 import { ScanLine, CheckCircle2 } from 'lucide-react'
 import FormField from '../../components/FormField'
 import BarcodeScannerModal from '../../components/Scanner/BarcodeScannerModal'
-import GeoUploadCard from '../../components/Geotagging/GeoUploadCard'
-import DistanceResult from '../../components/Geotagging/DistanceResult'
 import { useAuth } from '../../context/useAuth'
 import { calculateDistanceInMeters } from '../../utils/distance'
 import { addTransaction } from '../../utils/storage'
 
 const initialForm = {
-  firstName: '',
-  middleName: '',
-  lastName: '',
-  mobileNumber: '',
+  date: '',
+  projectId: '',
+  subscriber: '',
   address: '',
-  serialNumber: '',
+  focPrefabSerial: '',
+  modem: '',
+  telset: '',
+  iptvCcaNo: '',
 }
 
+const fieldLabels = {
+  date: 'Date',
+  projectId: 'Project ID',
+  subscriber: 'Subscriber',
+  address: 'Address',
+  focPrefabSerial: 'FOC Traditional / Prefab Serial',
+  modem: 'Modem',
+  telset: 'Telset',
+  iptvCcaNo: 'IPTV CCA No.',
+}
+
+const scanFields = ['focPrefabSerial', 'modem', 'telset', 'iptvCcaNo']
+
 const initialGeotagging = {
-  start: { imagePreview: '', latitude: '', longitude: '', timestamp: '' },
-  end: { imagePreview: '', latitude: '', longitude: '', timestamp: '' },
+  start: { latitude: '', longitude: '' },
+  end: { latitude: '', longitude: '' },
 }
 
 const inputClasses =
@@ -33,8 +46,8 @@ export default function TechnicianForm() {
   const [form, setForm] = useState(initialForm)
   const [geotagging, setGeotagging] = useState(initialGeotagging)
   const [errors, setErrors] = useState({})
-  const [scannerOpen, setScannerOpen] = useState(false)
-  const [scanSuccess, setScanSuccess] = useState(false)
+  const [activeScanField, setActiveScanField] = useState(null)
+  const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
   const distance = useMemo(() => {
@@ -55,35 +68,38 @@ export default function TechnicianForm() {
   }, [geotagging.start.latitude, geotagging.start.longitude, geotagging.end.latitude, geotagging.end.longitude])
 
   const handleChange = (field) => (e) => {
-    let { value } = e.target
-    if (field === 'mobileNumber') value = value.replace(/\D/g, '')
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+
+  const updateGeotagField = (point, field) => (e) => {
+    const { value } = e.target
+    setGeotagging((prev) => ({
+      ...prev,
+      [point]: { ...prev[point], [field]: value },
+    }))
   }
 
   const handleBarcodeDetected = (text) => {
-    setForm((prev) => ({ ...prev, serialNumber: text }))
-    setScannerOpen(false)
-    setScanSuccess(true)
-    setTimeout(() => setScanSuccess(false), 3000)
+    setForm((prev) => ({ ...prev, [activeScanField]: text }))
+    setScanSuccessField(activeScanField)
+    setActiveScanField(null)
+    setTimeout(() => setScanSuccessField(null), 3000)
   }
 
   const validate = () => {
     const next = {}
-    if (!form.firstName.trim()) next.firstName = 'First Name is required'
-    if (!form.lastName.trim()) next.lastName = 'Last Name is required'
-    if (!form.mobileNumber.trim()) next.mobileNumber = 'Mobile Number is required'
-    else if (form.mobileNumber.length < 11) next.mobileNumber = 'Mobile Number must be at least 11 digits'
-    if (!form.address.trim()) next.address = 'Address is required'
-    if (!form.serialNumber.trim()) next.serialNumber = 'Serial Number is required'
+    Object.keys(initialForm).forEach((field) => {
+      if (!form[field].trim()) {
+        next[field] = `${fieldLabels[field]} is required`
+      }
+    })
 
-    if (!geotagging.start.imagePreview) next.startImage = 'Start Geotag Image is required'
-    else if (!geotagging.start.latitude || !geotagging.start.longitude)
-      next.startImage = 'Start Latitude/Longitude could not be detected'
-
-    if (!geotagging.end.imagePreview) next.endImage = 'End Geotag Image is required'
-    else if (!geotagging.end.latitude || !geotagging.end.longitude)
-      next.endImage = 'End Latitude/Longitude could not be detected'
-
+    if (!geotagging.start.latitude || !geotagging.start.longitude) {
+      next.startGeotag = 'Start Latitude and Longitude are required'
+    }
+    if (!geotagging.end.latitude || !geotagging.end.longitude) {
+      next.endGeotag = 'End Latitude and Longitude are required'
+    }
     if (!distance.distanceMeters) next.distance = 'Distance must be computed'
 
     setErrors(next)
@@ -113,7 +129,7 @@ export default function TechnicianForm() {
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-xl font-bold text-gray-800">Encoding Form</h1>
 
-      {scanSuccess && (
+      {scanSuccessField && (
         <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
           <CheckCircle2 size={18} />
           Serial barcode scanned successfully
@@ -128,125 +144,146 @@ export default function TechnicianForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5 rounded-xl bg-white p-5 shadow-sm">
-        <section className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Subscriber Information
+        <section className="rounded-xl border border-gray-200 p-4">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            Geotagging
           </h2>
 
-          <FormField label="Technician Name">
-            <input
-              type="text"
-              value={user.fullName}
-              readOnly
-              className={`${inputClasses} cursor-not-allowed bg-gray-50`}
-            />
-          </FormField>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Start Latitude">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={geotagging.start.latitude}
+                  onChange={updateGeotagField('start', 'latitude')}
+                  className={inputClasses}
+                  placeholder="9.763115"
+                />
+              </FormField>
+              <FormField label="Start Longitude">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={geotagging.start.longitude}
+                  onChange={updateGeotagField('start', 'longitude')}
+                  className={inputClasses}
+                  placeholder="123.530931"
+                />
+              </FormField>
+            </div>
+            {errors.startGeotag && <p className="text-xs text-red-600">{errors.startGeotag}</p>}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="First Name" required error={errors.firstName}>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="End Latitude">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={geotagging.end.latitude}
+                  onChange={updateGeotagField('end', 'latitude')}
+                  className={inputClasses}
+                  placeholder="9.764000"
+                />
+              </FormField>
+              <FormField label="End Longitude">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={geotagging.end.longitude}
+                  onChange={updateGeotagField('end', 'longitude')}
+                  className={inputClasses}
+                  placeholder="123.531500"
+                />
+              </FormField>
+            </div>
+            {errors.endGeotag && <p className="text-xs text-red-600">{errors.endGeotag}</p>}
+
+            <FormField label="Geotagging Distance Result">
               <input
                 type="text"
-                value={form.firstName}
-                onChange={handleChange('firstName')}
-                className={inputClasses}
+                readOnly
+                value={
+                  distance.distanceMeters
+                    ? `${distance.distanceMeters} meters  (${distance.distanceKilometers} km)`
+                    : ''
+                }
+                placeholder="Distance will appear after both latitude/longitude pairs are entered"
+                className={`${inputClasses} cursor-not-allowed bg-orange-50 font-medium text-orange-800`}
               />
             </FormField>
-            <FormField label="Middle Name">
-              <input
-                type="text"
-                value={form.middleName}
-                onChange={handleChange('middleName')}
-                className={inputClasses}
-              />
-            </FormField>
+            {errors.distance && <p className="text-xs text-red-600">{errors.distance}</p>}
           </div>
-
-          <FormField label="Last Name" required error={errors.lastName}>
-            <input
-              type="text"
-              value={form.lastName}
-              onChange={handleChange('lastName')}
-              className={inputClasses}
-            />
-          </FormField>
-
-          <FormField label="Mobile Number" required error={errors.mobileNumber}>
-            <input
-              type="tel"
-              inputMode="numeric"
-              value={form.mobileNumber}
-              onChange={handleChange('mobileNumber')}
-              className={inputClasses}
-              placeholder="09171234567"
-            />
-          </FormField>
-
-          <FormField label="Address" required error={errors.address}>
-            <input
-              type="text"
-              value={form.address}
-              onChange={handleChange('address')}
-              className={inputClasses}
-            />
-          </FormField>
         </section>
 
-        <section className="space-y-2 border-t border-gray-100 pt-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Serial Barcode
-          </h2>
-          <FormField label="Serial Number" required error={errors.serialNumber}>
+        <FormField label={fieldLabels.date} required error={errors.date}>
+          <input
+            type="date"
+            value={form.date}
+            onChange={handleChange('date')}
+            className={inputClasses}
+          />
+        </FormField>
+
+        <FormField label="Tech Names">
+          <input
+            type="text"
+            value={user.fullName}
+            readOnly
+            className={`${inputClasses} cursor-not-allowed bg-gray-50`}
+          />
+        </FormField>
+
+        <FormField label={fieldLabels.projectId} required error={errors.projectId}>
+          <input
+            type="text"
+            value={form.projectId}
+            onChange={handleChange('projectId')}
+            className={inputClasses}
+            placeholder="PRJ-00123"
+          />
+        </FormField>
+
+        <FormField label={fieldLabels.subscriber} required error={errors.subscriber}>
+          <input
+            type="text"
+            value={form.subscriber}
+            onChange={handleChange('subscriber')}
+            className={inputClasses}
+            placeholder="Subscriber name"
+          />
+        </FormField>
+
+        <FormField label={fieldLabels.address} required error={errors.address}>
+          <input
+            type="text"
+            value={form.address}
+            onChange={handleChange('address')}
+            className={inputClasses}
+            placeholder="Installation address"
+          />
+        </FormField>
+
+        {scanFields.map((field) => (
+          <FormField key={field} label={fieldLabels[field]} required error={errors[field]}>
             <div className="flex gap-2">
               <input
                 type="text"
-                value={form.serialNumber}
-                onChange={handleChange('serialNumber')}
+                value={form[field]}
+                onChange={handleChange(field)}
                 className={inputClasses}
-                placeholder="Scan or enter serial number"
+                placeholder={`Scan or enter ${fieldLabels[field].toLowerCase()}`}
               />
               <button
                 type="button"
-                onClick={() => setScannerOpen(true)}
+                onClick={() => setActiveScanField(field)}
                 className="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-orange-500 px-3.5 text-white shadow-sm hover:opacity-90"
-                aria-label="Scan serial barcode"
+                aria-label={`Scan ${fieldLabels[field]}`}
               >
                 <ScanLine size={22} />
               </button>
             </div>
           </FormField>
-        </section>
-
-        <section className="space-y-3 border-t border-gray-100 pt-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-            Geotagging
-          </h2>
-          <p className="text-xs text-gray-400">
-            Note: Please upload original camera photos. Screenshots, Messenger images, and
-            Facebook images may not contain GPS metadata.
-          </p>
-
-          <GeoUploadCard
-            label="Start Geotag Image"
-            prefix="Start"
-            value={geotagging.start}
-            onChange={(data) => setGeotagging((prev) => ({ ...prev, start: data }))}
-          />
-          {errors.startImage && <p className="text-xs text-red-600">{errors.startImage}</p>}
-
-          <GeoUploadCard
-            label="End Geotag Image"
-            prefix="End"
-            value={geotagging.end}
-            onChange={(data) => setGeotagging((prev) => ({ ...prev, end: data }))}
-          />
-          {errors.endImage && <p className="text-xs text-red-600">{errors.endImage}</p>}
-
-          <DistanceResult
-            distanceMeters={distance.distanceMeters}
-            distanceKilometers={distance.distanceKilometers}
-          />
-          {errors.distance && <p className="text-xs text-red-600">{errors.distance}</p>}
-        </section>
+        ))}
 
         <button
           type="submit"
@@ -256,10 +293,10 @@ export default function TechnicianForm() {
         </button>
       </form>
 
-      {scannerOpen && (
+      {activeScanField && (
         <BarcodeScannerModal
           onDetected={handleBarcodeDetected}
-          onClose={() => setScannerOpen(false)}
+          onClose={() => setActiveScanField(null)}
         />
       )}
     </div>
