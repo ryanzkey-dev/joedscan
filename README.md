@@ -1,22 +1,30 @@
-# React + Vite
+# JOEDSCAN Technician Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A prototype role-based dashboard for technician installation reporting: barcode scanning,
+geotagging with EXIF GPS extraction and Haversine distance calculation, inventory, and
+subscriber/transaction tracking. Built with React + Vite + Tailwind CSS + Recharts, using
+`localStorage` only (no backend, no database).
 
-## Google Sheets submission
+## Run locally
 
-Form submissions are sent to a Google Sheet via a Google Apps Script Web App. See
-[google-apps-script/README.md](google-apps-script/README.md) for setup steps, then set
-`VITE_SHEET_WEBAPP_URL` in a local `.env` file (see `.env.example`).
+```bash
+npm install
+npm run dev
+```
 
-Currently, two official plugins are available:
+## Default login
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+Admin:      admin / joed123
+Technician: tech1 / tech123  (or tech2 / tech123)
+```
 
-## React Compiler
+Sample technicians, transactions, subscribers, and materials are seeded automatically on first
+load if `localStorage` is empty.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Legacy: Google Sheets integration
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+This project previously submitted forms to a Google Sheet via a Google Apps Script Web App
+(see [google-apps-script/](google-apps-script/)). That integration is no longer used by the app
+— data now lives entirely in `localStorage` — but the script and setup docs are left in the repo
+for reference.
