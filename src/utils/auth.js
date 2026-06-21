@@ -1,11 +1,45 @@
-import { getUsers, setLoggedInUser, clearLoggedInUser, getLoggedInUser } from './storage'
+import { setLoggedInUser, clearLoggedInUser, getLoggedInUser } from './storage'
+import { fetchAllData } from './sheetsApi'
 
-export function login(username, password) {
-  const user = getUsers().find(
-    (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+const ADMIN_CREDENTIAL = { username: 'admin', password: 'joed123' }
+const ADMIN_USER = {
+  id: 'ADMIN',
+  username: 'admin',
+  fullName: 'Administrator',
+  role: 'admin',
+}
+
+export async function login(username, password) {
+  if (
+    username.toLowerCase() === ADMIN_CREDENTIAL.username &&
+    password === ADMIN_CREDENTIAL.password
+  ) {
+    setLoggedInUser(ADMIN_USER)
+    return { success: true, user: ADMIN_USER }
+  }
+
+  let technicians
+  try {
+    const data = await fetchAllData()
+    technicians = data.technicians
+  } catch (err) {
+    return { success: false, message: `Could not reach Google Sheet: ${err.message}` }
+  }
+
+  const match = technicians.find(
+    (t) => t.username.toLowerCase() === username.toLowerCase() && t.password === password
   )
-  if (!user) {
+
+  if (!match) {
     return { success: false, message: 'Invalid username or password.' }
+  }
+
+  const user = {
+    id: match.id,
+    username: match.username,
+    fullName: match.fullName,
+    address: match.address,
+    role: 'technician',
   }
   setLoggedInUser(user)
   return { success: true, user }

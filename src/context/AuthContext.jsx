@@ -5,8 +5,8 @@ import { AuthContext } from './authContextObject'
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => authApi.currentUser())
 
-  const login = (username, password) => {
-    const result = authApi.login(username, password)
+  const login = async (username, password) => {
+    const result = await authApi.login(username, password)
     if (result.success) setUser(result.user)
     return result
   }

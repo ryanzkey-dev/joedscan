@@ -1,7 +1,20 @@
 # Google Sheets integration
 
-This form submits data to your Google Sheet via a Google Apps Script Web App
-(no separate backend, no exposed API keys).
+Google Sheets is the live data source for this app — there is no other database. The dashboard
+reads technicians and transactions directly from the spreadsheet (via `doGet`) and writes to it
+on every create/update (via `doPost`). Materials/Inventory is the only thing that still lives in
+the browser's `localStorage`.
+
+## Tabs
+
+- **`Technician`** — technician accounts (including password, since login reads this tab live).
+  Auto-created with headers on first write.
+- **`Transactions`** — full structured encoding-form submissions, including a `Status` column the
+  admin can update. This is what the dashboard's Subscribers/Transactions/dashboards read from.
+  Auto-created with headers on first write.
+- **`Sheet1`** — the pre-existing 39-column legacy installer report (see "Column mapping" below).
+  The app writes to it alongside `Transactions` on every encoding form submission, but never reads
+  from it — it's kept for the business's existing report, not for the dashboard.
 
 ## Setup
 
@@ -19,9 +32,9 @@ This form submits data to your Google Sheet via a Google Apps Script Web App
    ```
 7. Restart `npm run dev` so Vite picks up the new env variable.
 
-Every form submission appends one row to `Sheet1`, adding a header row automatically only if the
-sheet is empty (your sheet already has its header row, so this won't run). Technician account
-creation appends a row to a `Technician` tab (auto-created if missing) instead.
+Every encoding form submission appends one row to **both** `Sheet1` and `Transactions`. Technician
+account creation appends a row to `Technician`. IDs (`TECH-XXX`, `TRX-XXX`) are generated
+server-side from each tab's current row count.
 
 ### Updating the script after the first deploy
 

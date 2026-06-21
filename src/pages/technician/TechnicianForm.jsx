@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ScanLine, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ScanLine, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import FormField from '../../components/FormField'
 import BarcodeScannerModal from '../../components/Scanner/BarcodeScannerModal'
 import { useAuth } from '../../context/useAuth'
+import { useData } from '../../context/useData'
 import { calculateDistanceInMeters } from '../../utils/distance'
-import { addTransaction } from '../../utils/storage'
-import { submitToSheet } from '../../utils/submitToSheet'
+import { createTransaction } from '../../utils/sheetsApi'
 
 const initialForm = {
   date: '',
@@ -42,6 +42,7 @@ const inputClasses =
 
 export default function TechnicianForm() {
   const { user } = useAuth()
+  const { refresh } = useData()
   const navigate = useNavigate()
 
   const [form, setForm] = useState(initialForm)
@@ -51,6 +52,7 @@ export default function TechnicianForm() {
   const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [sheetError, setSheetError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const distance = useMemo(() => {
     const { start, end } = geotagging
@@ -112,21 +114,14 @@ export default function TechnicianForm() {
     e.preventDefault()
     if (!validate()) return
 
-    addTransaction({
-      technicianId: user.id,
-      technicianName: user.fullName,
-      ...form,
-      geotagging: { ...geotagging, ...distance },
-    })
-
-    setSubmitSuccess(true)
+    setSubmitting(true)
     setSheetError('')
 
-    let syncFailed = false
     try {
-      await submitToSheet({
+      await createTransaction({
+        technicianId: user.id,
+        technicianName: user.fullName,
         date: form.date,
-        techNames: user.fullName,
         projectId: form.projectId,
         subscriber: form.subscriber,
         address: form.address,
@@ -141,17 +136,17 @@ export default function TechnicianForm() {
         distanceMeters: distance.distanceMeters,
         distanceKilometers: distance.distanceKilometers,
       })
-    } catch (err) {
-      syncFailed = true
-      setSheetError(`Saved locally, but could not sync to Google Sheet: ${err.message}`)
-    }
 
-    setForm(initialForm)
-    setGeotagging(initialGeotagging)
-    setErrors({})
-
-    if (!syncFailed) {
+      await refresh()
+      setSubmitSuccess(true)
+      setForm(initialForm)
+      setGeotagging(initialGeotagging)
+      setErrors({})
       setTimeout(() => navigate('/technician/records'), 1200)
+    } catch (err) {
+      setSheetError(`Could not submit to Google Sheet: ${err.message}`)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -324,9 +319,11 @@ export default function TechnicianForm() {
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-3 font-semibold text-white shadow-md hover:opacity-90"
+          disabled={submitting}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-3 font-semibold text-white shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Submit Form
+          {submitting && <Loader2 size={18} className="animate-spin" />}
+          {submitting ? 'Submitting...' : 'Submit Form'}
         </button>
       </form>
 

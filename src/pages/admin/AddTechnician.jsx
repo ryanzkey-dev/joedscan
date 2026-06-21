@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react'
+import { UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
-import { addTechnician, getTechnicians, isUsernameTaken } from '../../utils/storage'
-import { submitToSheet } from '../../utils/submitToSheet'
+import { useData } from '../../context/useData'
+import { createTechnician } from '../../utils/sheetsApi'
 
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
@@ -10,11 +10,12 @@ const inputClasses =
 const initialForm = { fullName: '', address: '', username: '', password: '' }
 
 export default function AddTechnician() {
+  const { technicians, loading, error, refresh } = useData()
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
-  const [technicians, setTechnicians] = useState(() => getTechnicians())
   const [success, setSuccess] = useState(false)
-  const [sheetError, setSheetError] = useState('')
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -26,36 +27,35 @@ export default function AddTechnician() {
     if (!form.fullName.trim()) next.fullName = 'Full Name is required'
     if (!form.address.trim()) next.address = 'Address is required'
     if (!form.username.trim()) next.username = 'Username is required'
-    else if (isUsernameTaken(form.username.trim())) next.username = 'Username is already taken'
+    else if (
+      technicians.some((t) => t.username.toLowerCase() === form.username.trim().toLowerCase())
+    ) {
+      next.username = 'Username is already taken'
+    }
     if (!form.password.trim()) next.password = 'Password is required'
 
     setErrors(next)
     if (Object.keys(next).length > 0) return
 
-    const record = addTechnician({
-      fullName: form.fullName.trim(),
-      address: form.address.trim(),
-      username: form.username.trim(),
-      password: form.password,
-    })
-
-    setTechnicians(getTechnicians())
-    setForm(initialForm)
-    setSuccess(true)
-    setSheetError('')
-    setTimeout(() => setSuccess(false), 3000)
+    setSubmitting(true)
+    setSubmitError('')
 
     try {
-      await submitToSheet({
-        formType: 'technician',
-        id: record.id,
-        fullName: record.fullName,
-        address: record.address,
-        username: record.username,
-        createdAt: record.createdAt,
+      await createTechnician({
+        fullName: form.fullName.trim(),
+        address: form.address.trim(),
+        username: form.username.trim(),
+        password: form.password,
+        createdAt: new Date().toISOString(),
       })
+      await refresh()
+      setForm(initialForm)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
-      setSheetError(`Account created, but could not sync to Google Sheet: ${err.message}`)
+      setSubmitError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -82,10 +82,10 @@ export default function AddTechnician() {
         </div>
       )}
 
-      {sheetError && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+      {(submitError || error) && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           <AlertCircle size={18} />
-          {sheetError}
+          {submitError || error}
         </div>
       )}
 
@@ -143,16 +143,21 @@ export default function AddTechnician() {
 
         <button
           type="submit"
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 px-5 py-2.5 font-semibold text-white shadow-md hover:opacity-90"
+          disabled={submitting}
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 px-5 py-2.5 font-semibold text-white shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          <UserPlus size={18} />
-          Add Technician
+          {submitting ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
+          {submitting ? 'Adding...' : 'Add Technician'}
         </button>
       </form>
 
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Technician Accounts</p>
-        <DataTable columns={columns} rows={technicians} />
+        {loading ? (
+          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        ) : (
+          <DataTable columns={columns} rows={technicians} />
+        )}
       </div>
     </div>
   )

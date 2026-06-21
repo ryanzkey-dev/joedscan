@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogIn } from 'lucide-react'
+import { LogIn, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 
 export default function Login() {
@@ -9,10 +9,16 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const result = login(username, password)
+    setSubmitting(true)
+    setError('')
+
+    const result = await login(username, password)
+
+    setSubmitting(false)
     if (!result.success) {
       setError(result.message)
       return
@@ -57,10 +63,11 @@ export default function Login() {
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-2.5 font-semibold text-white shadow-md hover:opacity-90"
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-orange-400 py-2.5 font-semibold text-white shadow-md hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <LogIn size={18} />
-            Login
+            {submitting ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
+            {submitting ? 'Signing in...' : 'Login'}
           </button>
         </form>
 

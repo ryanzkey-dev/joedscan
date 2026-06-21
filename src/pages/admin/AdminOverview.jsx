@@ -10,11 +10,12 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts'
-import { Users, UserCog, Package, ClipboardList, CheckCircle2, Clock } from 'lucide-react'
+import { Users, UserCog, Package, ClipboardList, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
-import { getSubscribers, getTechnicians, getMaterials, getTransactions } from '../../utils/storage'
+import { useData } from '../../context/useData'
+import { getMaterials } from '../../utils/storage'
 
 function groupCount(items, keyFn) {
   const map = new Map()
@@ -26,10 +27,8 @@ function groupCount(items, keyFn) {
 }
 
 export default function AdminOverview() {
-  const subscribers = getSubscribers()
-  const technicians = getTechnicians()
+  const { technicians, transactions, loading, error } = useData()
   const materials = getMaterials()
-  const transactions = getTransactions()
 
   const completed = transactions.filter((t) => t.status === 'Completed').length
   const pending = transactions.filter((t) => t.status === 'Pending').length
@@ -82,8 +81,15 @@ export default function AdminOverview() {
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-gray-800">Overview</h1>
 
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Total Subscribers" value={subscribers.length} icon={Users} accent />
+        <StatCard label="Total Subscribers" value={transactions.length} icon={Users} accent />
         <StatCard label="Total Technicians" value={technicians.length} icon={UserCog} />
         <StatCard label="Total Materials" value={materials.length} icon={Package} />
         <StatCard label="Total Transactions" value={transactions.length} icon={ClipboardList} />
@@ -134,7 +140,11 @@ export default function AdminOverview() {
 
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Last Transactions</p>
-        <DataTable columns={columns} rows={sortedTransactions} pageSize={10} />
+        {loading ? (
+          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        ) : (
+          <DataTable columns={columns} rows={sortedTransactions} pageSize={10} />
+        )}
       </div>
     </div>
   )

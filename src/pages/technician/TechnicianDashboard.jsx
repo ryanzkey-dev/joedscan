@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { ClipboardList, CheckCircle2, Clock, CalendarCheck } from 'lucide-react'
+import { ClipboardList, CheckCircle2, Clock, CalendarCheck, AlertCircle } from 'lucide-react'
 import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import { useAuth } from '../../context/useAuth'
-import { getTransactions } from '../../utils/storage'
+import { useData } from '../../context/useData'
 
 function isSameDay(a, b) {
   return (
@@ -17,7 +17,8 @@ function isSameDay(a, b) {
 
 export default function TechnicianDashboard() {
   const { user } = useAuth()
-  const myTransactions = getTransactions().filter((t) => t.technicianId === user.id)
+  const { transactions, loading, error } = useData()
+  const myTransactions = transactions.filter((t) => t.technicianId === user.id)
 
   const completed = myTransactions.filter((t) => t.status === 'Completed').length
   const pending = myTransactions.filter((t) => t.status === 'Pending').length
@@ -41,13 +42,8 @@ export default function TechnicianDashboard() {
 
   const columns = [
     { key: 'id', label: 'Transaction ID' },
-    {
-      key: 'subscriber',
-      label: 'Subscriber',
-      render: (row) => [row.firstName, row.lastName].filter(Boolean).join(' '),
-    },
-    { key: 'mobileNumber', label: 'Mobile Number' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'subscriber', label: 'Subscriber' },
+    { key: 'focPrefabSerial', label: 'Serial Number' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
       key: 'createdAt',
@@ -59,6 +55,13 @@ export default function TechnicianDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-gray-800">My Dashboard</h1>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -87,7 +90,11 @@ export default function TechnicianDashboard() {
 
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">My Recent Records</p>
-        <DataTable columns={columns} rows={sorted} pageSize={10} />
+        {loading ? (
+          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        ) : (
+          <DataTable columns={columns} rows={sorted} pageSize={10} />
+        )}
       </div>
     </div>
   )

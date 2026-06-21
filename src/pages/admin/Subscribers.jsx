@@ -1,16 +1,14 @@
 import { useMemo, useState } from 'react'
-import { Search, Eye } from 'lucide-react'
+import { Search, Eye, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
-import { getSubscribers, getTechnicians, getTransactions } from '../../utils/storage'
+import { useData } from '../../context/useData'
 
 const STATUS_OPTIONS = ['All', 'Pending', 'For Review', 'Completed', 'Rejected']
 
 export default function Subscribers() {
-  const subscribers = getSubscribers()
-  const technicians = getTechnicians()
-  const transactions = getTransactions()
+  const { technicians, transactions, loading, error } = useData()
 
   const [search, setSearch] = useState('')
   const [technicianFilter, setTechnicianFilter] = useState('All')
@@ -19,18 +17,18 @@ export default function Subscribers() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return subscribers.filter((s) => {
+    return transactions.filter((t) => {
       const matchesSearch =
         !term ||
-        s.subscriber?.toLowerCase().includes(term) ||
-        s.focPrefabSerial?.toLowerCase().includes(term) ||
-        s.modem?.toLowerCase().includes(term) ||
-        s.technicianName?.toLowerCase().includes(term)
-      const matchesTechnician = technicianFilter === 'All' || s.technicianId === technicianFilter
-      const matchesStatus = statusFilter === 'All' || s.status === statusFilter
+        t.subscriber?.toLowerCase().includes(term) ||
+        t.focPrefabSerial?.toLowerCase().includes(term) ||
+        t.modem?.toLowerCase().includes(term) ||
+        t.technicianName?.toLowerCase().includes(term)
+      const matchesTechnician = technicianFilter === 'All' || t.technicianId === technicianFilter
+      const matchesStatus = statusFilter === 'All' || t.status === statusFilter
       return matchesSearch && matchesTechnician && matchesStatus
     })
-  }, [subscribers, search, technicianFilter, statusFilter])
+  }, [transactions, search, technicianFilter, statusFilter])
 
   const columns = [
     { key: 'id', label: 'Subscriber ID' },
@@ -55,7 +53,7 @@ export default function Subscribers() {
       render: (row) => (
         <button
           type="button"
-          onClick={() => setViewing(transactions.find((t) => t.id === row.transactionId))}
+          onClick={() => setViewing(row)}
           className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
         >
           <Eye size={14} />
@@ -68,6 +66,13 @@ export default function Subscribers() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-gray-800">Subscribers</h1>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -105,7 +110,11 @@ export default function Subscribers() {
         </select>
       </div>
 
-      <DataTable columns={columns} rows={filtered} />
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+      ) : (
+        <DataTable columns={columns} rows={filtered} />
+      )}
 
       {viewing && <ViewTransactionModal transaction={viewing} onClose={() => setViewing(null)} />}
     </div>

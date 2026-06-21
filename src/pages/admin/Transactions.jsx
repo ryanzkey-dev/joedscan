@@ -1,24 +1,28 @@
 import { useState } from 'react'
-import { Eye } from 'lucide-react'
+import { Eye, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
-import { getTransactions, updateTransactionStatus } from '../../utils/storage'
+import { useData } from '../../context/useData'
+import { updateTransactionStatus } from '../../utils/sheetsApi'
 
 const STATUS_OPTIONS = ['Pending', 'For Review', 'Completed', 'Rejected']
 
 export default function Transactions() {
-  const [transactions, setTransactions] = useState(() =>
-    [...getTransactions()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  )
+  const { transactions, loading, error, refresh } = useData()
   const [viewing, setViewing] = useState(null)
+  const [statusError, setStatusError] = useState('')
 
-  const handleStatusChange = (id, status) => {
-    updateTransactionStatus(id, status)
-    const refreshed = [...getTransactions()].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    )
-    setTransactions(refreshed)
-    setViewing((prev) => (prev && prev.id === id ? refreshed.find((t) => t.id === id) : prev))
+  const sorted = [...transactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+  const handleStatusChange = async (id, status) => {
+    setStatusError('')
+    try {
+      await updateTransactionStatus(id, status)
+      await refresh()
+      setViewing((prev) => (prev && prev.id === id ? { ...prev, status } : prev))
+    } catch (err) {
+      setStatusError(err.message)
+    }
   }
 
   const columns = [
@@ -73,7 +77,18 @@ export default function Transactions() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-gray-800">Transactions</h1>
 
-      <DataTable columns={columns} rows={transactions} />
+      {(statusError || error) && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <AlertCircle size={18} />
+          {statusError || error}
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+      ) : (
+        <DataTable columns={columns} rows={sorted} />
+      )}
 
       {viewing && (
         <ViewTransactionModal

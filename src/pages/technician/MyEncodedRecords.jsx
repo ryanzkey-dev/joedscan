@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Search, Eye } from 'lucide-react'
+import { Search, Eye, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
 import { useAuth } from '../../context/useAuth'
-import { getTransactions } from '../../utils/storage'
+import { useData } from '../../context/useData'
 
 export default function MyEncodedRecords() {
   const { user } = useAuth()
+  const { transactions, loading, error } = useData()
   const [search, setSearch] = useState('')
   const [viewing, setViewing] = useState(null)
 
-  const myTransactions = getTransactions().filter((t) => t.technicianId === user.id)
+  const myTransactions = transactions.filter((t) => t.technicianId === user.id)
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -61,6 +62,13 @@ export default function MyEncodedRecords() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-gray-800">My Encoded Records</h1>
 
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
+
       <div className="relative rounded-xl bg-white p-4 shadow-sm">
         <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
@@ -72,7 +80,11 @@ export default function MyEncodedRecords() {
         />
       </div>
 
-      <DataTable columns={columns} rows={sorted} />
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+      ) : (
+        <DataTable columns={columns} rows={sorted} />
+      )}
 
       {viewing && <ViewTransactionModal transaction={viewing} onClose={() => setViewing(null)} />}
     </div>
