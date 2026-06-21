@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ScanLine, CheckCircle2 } from 'lucide-react'
+import { ScanLine, CheckCircle2, AlertCircle } from 'lucide-react'
 import FormField from '../../components/FormField'
 import BarcodeScannerModal from '../../components/Scanner/BarcodeScannerModal'
 import { useAuth } from '../../context/useAuth'
 import { calculateDistanceInMeters } from '../../utils/distance'
 import { addTransaction } from '../../utils/storage'
+import { submitToSheet } from '../../utils/submitToSheet'
 
 const initialForm = {
   date: '',
@@ -49,6 +50,7 @@ export default function TechnicianForm() {
   const [activeScanField, setActiveScanField] = useState(null)
   const [scanSuccessField, setScanSuccessField] = useState(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [sheetError, setSheetError] = useState('')
 
   const distance = useMemo(() => {
     const { start, end } = geotagging
@@ -106,7 +108,7 @@ export default function TechnicianForm() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
 
@@ -118,11 +120,39 @@ export default function TechnicianForm() {
     })
 
     setSubmitSuccess(true)
+    setSheetError('')
+
+    let syncFailed = false
+    try {
+      await submitToSheet({
+        date: form.date,
+        techNames: user.fullName,
+        projectId: form.projectId,
+        subscriber: form.subscriber,
+        address: form.address,
+        focPrefabSerial: form.focPrefabSerial,
+        modem: form.modem,
+        telset: form.telset,
+        iptvCcaNo: form.iptvCcaNo,
+        startLatitude: geotagging.start.latitude,
+        startLongitude: geotagging.start.longitude,
+        endLatitude: geotagging.end.latitude,
+        endLongitude: geotagging.end.longitude,
+        distanceMeters: distance.distanceMeters,
+        distanceKilometers: distance.distanceKilometers,
+      })
+    } catch (err) {
+      syncFailed = true
+      setSheetError(`Saved locally, but could not sync to Google Sheet: ${err.message}`)
+    }
+
     setForm(initialForm)
     setGeotagging(initialGeotagging)
     setErrors({})
 
-    setTimeout(() => navigate('/technician/records'), 1200)
+    if (!syncFailed) {
+      setTimeout(() => navigate('/technician/records'), 1200)
+    }
   }
 
   return (
@@ -140,6 +170,13 @@ export default function TechnicianForm() {
         <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
           <CheckCircle2 size={18} />
           Form submitted successfully. Redirecting to My Encoded Records...
+        </div>
+      )}
+
+      {sheetError && (
+        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+          <AlertCircle size={18} />
+          {sheetError}
         </div>
       )}
 
