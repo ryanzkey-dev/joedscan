@@ -50,12 +50,6 @@ const DEFAULT_ADMIN = {
   createdAt: new Date().toISOString(),
 }
 
-function daysAgoIso(days) {
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d.toISOString()
-}
-
 export function addTechnician({ fullName, address, username, password }) {
   const technicians = getTechnicians()
   const users = getUsers()
@@ -170,143 +164,9 @@ export function deleteMaterial(id) {
   saveMaterials(getMaterials().filter((m) => m.id !== id))
 }
 
-function seedSampleData(technicians) {
-  const statuses = ['Pending', 'For Review', 'Completed', 'Rejected']
-  const sampleSubscribers = [
-    'Juan Dela Cruz',
-    'Maria Santos',
-    'Pedro Reyes',
-    'Ana Garcia',
-    'Jose Ramos',
-    'Liza Torres',
-    'Mark Cruz',
-    'Grace Lim',
-    'Paolo Fernandez',
-    'Rosa Aquino',
-    'Ben Castillo',
-    'Nina Bautista',
-  ]
-
-  const transactions = []
-  const subscribers = []
-
-  sampleSubscribers.forEach((subscriberName, index) => {
-    const tech = technicians[index % technicians.length]
-    const daysAgo = Math.floor(index / 2)
-    const createdAt = daysAgoIso(daysAgo)
-    const transactionId = `TRX-${String(index + 1).padStart(3, '0')}`
-    const subscriberId = `SUB-${String(index + 1).padStart(3, '0')}`
-    const status = statuses[index % statuses.length]
-    const startLat = (9.7 + index * 0.001).toFixed(6)
-    const startLon = (123.5 + index * 0.001).toFixed(6)
-    const endLat = (9.701 + index * 0.001).toFixed(6)
-    const endLon = (123.501 + index * 0.001).toFixed(6)
-    const distanceMeters = (120 + index * 7.5).toFixed(2)
-    const distanceKilometers = (distanceMeters / 1000).toFixed(3)
-
-    const geotagging = {
-      start: { latitude: startLat, longitude: startLon },
-      end: { latitude: endLat, longitude: endLon },
-      distanceMeters,
-      distanceKilometers,
-    }
-
-    const focPrefabSerial = `FOC-${1000 + index}`
-    const modem = `MDM-${2000 + index}`
-    const telset = `TEL-${3000 + index}`
-    const iptvCcaNo = `CCA-${4000 + index}`
-    const projectId = `PRJ-${100 + index}`
-    const address = `${index + 1} Sample St., Demo City`
-
-    transactions.push({
-      id: transactionId,
-      technicianId: tech.id,
-      technicianName: tech.fullName,
-      date: createdAt.slice(0, 10),
-      projectId,
-      subscriber: subscriberName,
-      address,
-      focPrefabSerial,
-      modem,
-      telset,
-      iptvCcaNo,
-      geotagging,
-      status,
-      createdAt,
-    })
-
-    subscribers.push({
-      id: subscriberId,
-      transactionId,
-      subscriber: subscriberName,
-      address,
-      technicianId: tech.id,
-      technicianName: tech.fullName,
-      projectId,
-      focPrefabSerial,
-      modem,
-      telset,
-      iptvCcaNo,
-      startLatitude: startLat,
-      startLongitude: startLon,
-      endLatitude: endLat,
-      endLongitude: endLon,
-      distanceMeters,
-      status,
-      createdAt,
-    })
-  })
-
-  saveTransactions(transactions)
-  saveSubscribers(subscribers)
-
-  const materials = [
-    { name: 'Fiber Optic Cable', category: 'Cable', quantity: 120, unit: 'meters' },
-    { name: 'ONU Modem', category: 'Equipment', quantity: 35, unit: 'pcs' },
-    { name: 'Set-top Box', category: 'Equipment', quantity: 4, unit: 'pcs' },
-    { name: 'Cable Tie', category: 'Accessory', quantity: 500, unit: 'pcs' },
-    { name: 'Fiber Connector', category: 'Accessory', quantity: 5, unit: 'pcs' },
-    { name: 'Splitter', category: 'Equipment', quantity: 18, unit: 'pcs' },
-  ].map((m, index) => ({
-    id: `MAT-${String(index + 1).padStart(3, '0')}`,
-    materialName: m.name,
-    category: m.category,
-    quantity: m.quantity,
-    unit: m.unit,
-    serialNumber: '',
-    remarks: '',
-    createdAt: daysAgoIso(10 - index),
-  }))
-
-  saveMaterials(materials)
-}
-
 export function seedInitialData() {
   const users = getUsers()
   if (users.length > 0) return
 
-  const sampleTechnicians = [
-    {
-      id: 'TECH-001',
-      fullName: 'Juan Dela Cruz',
-      address: 'Dalaguete, Cebu',
-      username: 'tech1',
-      password: 'tech123',
-      role: 'technician',
-      createdAt: daysAgoIso(20),
-    },
-    {
-      id: 'TECH-002',
-      fullName: 'Maria Santos',
-      address: 'Argao, Cebu',
-      username: 'tech2',
-      password: 'tech123',
-      role: 'technician',
-      createdAt: daysAgoIso(15),
-    },
-  ]
-
-  saveTechnicians(sampleTechnicians)
-  saveUsers([DEFAULT_ADMIN, ...sampleTechnicians])
-  seedSampleData(sampleTechnicians)
+  saveUsers([DEFAULT_ADMIN])
 }
