@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { UserPlus, CheckCircle2 } from 'lucide-react'
+import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import { addTechnician, getTechnicians, isUsernameTaken } from '../../utils/storage'
+import { submitToSheet } from '../../utils/submitToSheet'
 
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
@@ -13,12 +14,13 @@ export default function AddTechnician() {
   const [errors, setErrors] = useState({})
   const [technicians, setTechnicians] = useState(() => getTechnicians())
   const [success, setSuccess] = useState(false)
+  const [sheetError, setSheetError] = useState('')
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const next = {}
     if (!form.fullName.trim()) next.fullName = 'Full Name is required'
@@ -30,7 +32,7 @@ export default function AddTechnician() {
     setErrors(next)
     if (Object.keys(next).length > 0) return
 
-    addTechnician({
+    const record = addTechnician({
       fullName: form.fullName.trim(),
       address: form.address.trim(),
       username: form.username.trim(),
@@ -40,7 +42,21 @@ export default function AddTechnician() {
     setTechnicians(getTechnicians())
     setForm(initialForm)
     setSuccess(true)
+    setSheetError('')
     setTimeout(() => setSuccess(false), 3000)
+
+    try {
+      await submitToSheet({
+        formType: 'technician',
+        id: record.id,
+        fullName: record.fullName,
+        address: record.address,
+        username: record.username,
+        createdAt: record.createdAt,
+      })
+    } catch (err) {
+      setSheetError(`Account created, but could not sync to Google Sheet: ${err.message}`)
+    }
   }
 
   const columns = [
@@ -63,6 +79,13 @@ export default function AddTechnician() {
         <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
           <CheckCircle2 size={18} />
           Technician account created successfully
+        </div>
+      )}
+
+      {sheetError && (
+        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+          <AlertCircle size={18} />
+          {sheetError}
         </div>
       )}
 

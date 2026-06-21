@@ -1,4 +1,5 @@
 const SHEET_NAME = 'Sheet1'
+const TECHNICIAN_SHEET_NAME = 'Technician'
 
 // Matches the existing header row in the spreadsheet exactly (column A through AM).
 const HEADERS = [
@@ -43,6 +44,8 @@ const HEADERS = [
   'FOC TYPE',
 ]
 
+const TECHNICIAN_HEADERS = ['Technician ID', 'Full Name', 'Address', 'Username', 'Created At']
+
 function buildGeotagSummary(data) {
   const parts = []
   if (data.startLatitude && data.startLongitude) {
@@ -57,13 +60,36 @@ function buildGeotagSummary(data) {
   return parts.join(' | ')
 }
 
-function doPost(e) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME)
-  const data = JSON.parse(e.postData.contents)
-
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS)
+function getOrCreateSheet(name, headers) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  let sheet = ss.getSheetByName(name)
+  if (!sheet) {
+    sheet = ss.insertSheet(name)
   }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers)
+  }
+  return sheet
+}
+
+function saveTechnician(data) {
+  const sheet = getOrCreateSheet(TECHNICIAN_SHEET_NAME, TECHNICIAN_HEADERS)
+
+  sheet.appendRow([
+    data.id || '',
+    data.fullName || '',
+    data.address || '',
+    data.username || '',
+    data.createdAt || new Date().toISOString(),
+  ])
+
+  return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(
+    ContentService.MimeType.JSON
+  )
+}
+
+function saveInstallerRecord(data) {
+  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
 
   sheet.appendRow([
     '', // 3 (unused index column)
@@ -110,6 +136,16 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(
     ContentService.MimeType.JSON
   )
+}
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents)
+
+  if (data.formType === 'technician') {
+    return saveTechnician(data)
+  }
+
+  return saveInstallerRecord(data)
 }
 
 function doGet() {
