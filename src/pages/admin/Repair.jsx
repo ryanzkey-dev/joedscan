@@ -463,7 +463,7 @@ export default function Repair() {
 
   return (
     <div className="w-full max-w-full space-y-6 overflow-hidden">
-      <h1 className="text-xl font-bold text-gray-800">Repair</h1>
+      <h1 className="text-xl font-bold text-gray-800">Add Repair Ticket</h1>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

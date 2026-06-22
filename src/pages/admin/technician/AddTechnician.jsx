@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
-import DataTable from '../../components/Tables/DataTable'
-import LoadingData from '../../components/Loading/LoadingData'
-import { useData } from '../../context/useData'
-import { createTechnician } from '../../utils/sheetsApi'
+import DataTable from '../../../components/Tables/DataTable'
+import LoadingData from '../../../components/Loading/LoadingData'
+import { useData } from '../../../context/useData'
+import { createTechnician } from '../../../utils/sheetsApi'
 
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'

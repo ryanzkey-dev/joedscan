@@ -4,9 +4,11 @@ import xqPortalLogo from '../../assets/xq-portal-logo.jpg'
 import {
   LayoutDashboard,
   UserPlus,
+  Users,
   Database,
   Package,
   ClipboardList,
+  ClipboardCheck,
   LogOut,
   FileText,
   Send,
@@ -16,14 +18,22 @@ import {
   Boxes,
   ChevronDown,
   Calendar,
+  Eye,
   X,
 } from 'lucide-react'
 
 const ADMIN_MENU = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
   { label: 'Raw Data', to: '/admin/raw-data', icon: Database },
-  { label: 'Dispatch', to: '/admin/dispatch', icon: Send },
-  { label: 'Repair', to: '/admin/repair', icon: Wrench },
+  {
+    label: 'Dispatch',
+    icon: Send,
+    children: [
+      { label: 'Install', to: '/admin/dispatch/install', icon: ClipboardCheck },
+      { label: 'Repair', to: '/admin/dispatch/repair', icon: Wrench },
+    ],
+  },
+  { label: 'Add Repair Ticket', to: '/admin/add-repair-ticket', icon: Wrench },
   {
     label: 'Materials',
     icon: Package,
@@ -34,8 +44,15 @@ const ADMIN_MENU = [
       { label: 'Inventory', to: '/admin/materials/inventory', icon: Boxes },
     ],
   },
+  {
+    label: 'Technician',
+    icon: Users,
+    children: [
+      { label: 'Add Technician', to: '/admin/technician/add', icon: UserPlus },
+      { label: 'View All Technician', to: '/admin/technician/view-all', icon: Eye },
+    ],
+  },
   { label: 'Attendance', to: '/admin/attendance', icon: Calendar },
-  { label: 'Add Technician', to: '/admin/add-technician', icon: UserPlus },
   { label: 'Transactions', to: '/admin/transactions', icon: ClipboardList },
 ]
 

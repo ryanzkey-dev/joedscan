@@ -6,9 +6,11 @@ import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/Layout/DashboardLayout'
 import Login from './pages/Login'
 import AdminOverview from './pages/admin/AdminOverview'
-import AddTechnician from './pages/admin/AddTechnician'
+import AddTechnician from './pages/admin/technician/AddTechnician'
+import ViewAllTechnician from './pages/admin/technician/ViewAllTechnician'
 import RawData from './pages/admin/RawData'
-import Dispatch from './pages/admin/Dispatch'
+import DispatchInstall from './pages/admin/dispatch/DispatchInstall'
+import DispatchRepair from './pages/admin/dispatch/DispatchRepair'
 import Repair from './pages/admin/Repair'
 import AddMaterials from './pages/admin/materials/AddMaterials'
 import SendMaterials from './pages/admin/materials/SendMaterials'
@@ -51,11 +53,21 @@ function App() {
               }
             />
             <Route
-              path="/admin/add-technician"
+              path="/admin/technician/add"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
                     <AddTechnician />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/technician/view-all"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <ViewAllTechnician />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -71,17 +83,27 @@ function App() {
               }
             />
             <Route
-              path="/admin/dispatch"
+              path="/admin/dispatch/install"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
-                    <Dispatch />
+                    <DispatchInstall />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin/repair"
+              path="/admin/dispatch/repair"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <DispatchRepair />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/add-repair-ticket"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>

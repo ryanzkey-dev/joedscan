@@ -178,18 +178,13 @@ export default function AdminAttendance() {
         <StatCard label="Today Attendance" value={todayCount} icon={Calendar} />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:flex-wrap">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by technician, dispatch type, or remarks"
-            className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-          />
-        </div>
-        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className={inputClasses} />
+      <div className="grid grid-cols-1 gap-3 rounded-xl bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          className={inputClasses}
+        />
         <select value={technicianFilter} onChange={(e) => setTechnicianFilter(e.target.value)} className={inputClasses}>
           <option value="All">All Technicians</option>
           {technicians.map((t) => (
@@ -212,6 +207,16 @@ export default function AdminAttendance() {
             </option>
           ))}
         </select>
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+          />
+        </div>
       </div>
 
       {loading ? (
