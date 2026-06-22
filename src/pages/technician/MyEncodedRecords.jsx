@@ -3,6 +3,7 @@ import { Search, Eye, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useAuth } from '../../context/useAuth'
 import { useData } from '../../context/useData'
 
@@ -81,7 +82,7 @@ export default function MyEncodedRecords() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <DataTable columns={columns} rows={sorted} />
       )}

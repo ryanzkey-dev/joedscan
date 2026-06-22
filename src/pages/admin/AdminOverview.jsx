@@ -14,6 +14,7 @@ import { Users, UserCog, Package, ClipboardList, CheckCircle2, Clock, AlertCircl
 import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useData } from '../../context/useData'
 import { apiRequest } from '../../utils/sheetsApi'
 
@@ -147,7 +148,7 @@ export default function AdminOverview() {
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Last Transactions</p>
         {loading ? (
-          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+          <LoadingData />
         ) : (
           <DataTable columns={columns} rows={sortedTransactions} pageSize={10} />
         )}

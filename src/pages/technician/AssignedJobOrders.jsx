@@ -3,6 +3,7 @@ import { Eye, PlayCircle, CheckCircle2, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import RecordDetailsModal from '../../components/Modals/RecordDetailsModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useAuth } from '../../context/useAuth'
 import { apiRequest } from '../../utils/sheetsApi'
 
@@ -121,7 +122,7 @@ export default function AssignedJobOrders() {
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <DataTable columns={columns} rows={jobOrders} />
       )}

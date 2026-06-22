@@ -4,6 +4,7 @@ import DataTable from '../../../components/Tables/DataTable'
 import StatusBadge from '../../../components/Tables/StatusBadge'
 import RecordDetailsModal from '../../../components/Modals/RecordDetailsModal'
 import EditMaterialCatalogModal from '../../../components/Modals/EditMaterialCatalogModal'
+import LoadingData from '../../../components/Loading/LoadingData'
 import { useAuth } from '../../../context/useAuth'
 import { apiRequest } from '../../../utils/sheetsApi'
 
@@ -210,7 +211,7 @@ export default function AddMaterials() {
       </form>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <DataTable columns={columns} rows={catalog} />
       )}

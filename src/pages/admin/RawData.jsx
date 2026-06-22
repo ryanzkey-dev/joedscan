@@ -4,6 +4,7 @@ import Pagination from '../../components/Tables/Pagination'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
 import EditRawDataModal from '../../components/Modals/EditRawDataModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useData } from '../../context/useData'
 import { updateRawData } from '../../utils/sheetsApi'
 
@@ -120,7 +121,7 @@ export default function RawData() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
           <div className="w-full overflow-x-auto">

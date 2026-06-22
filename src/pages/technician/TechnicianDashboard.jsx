@@ -4,6 +4,7 @@ import { ClipboardList, CheckCircle2, Clock, CalendarCheck, AlertCircle } from '
 import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useAuth } from '../../context/useAuth'
 import { useData } from '../../context/useData'
 
@@ -91,7 +92,7 @@ export default function TechnicianDashboard() {
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">My Recent Records</p>
         {loading ? (
-          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+          <LoadingData />
         ) : (
           <DataTable columns={columns} rows={sorted} pageSize={10} />
         )}

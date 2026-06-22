@@ -3,6 +3,7 @@ import { Search, Eye, AlertCircle, CheckCircle, XCircle, Calendar, ExternalLink 
 import DataTable from '../../components/Tables/DataTable'
 import StatCard from '../../components/Cards/StatCard'
 import AttendanceDetailsModal from '../../components/Attendance/AttendanceDetailsModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { apiRequest } from '../../utils/sheetsApi'
 import { getManilaTimeNow, toDateKey, formatDisplayDate } from '../../utils/manilaTime'
 
@@ -214,7 +215,7 @@ export default function AdminAttendance() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <DataTable columns={columns} rows={filtered} />
       )}

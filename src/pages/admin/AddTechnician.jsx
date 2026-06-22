@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useData } from '../../context/useData'
 import { createTechnician } from '../../utils/sheetsApi'
 
@@ -154,7 +155,7 @@ export default function AddTechnician() {
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Technician Accounts</p>
         {loading ? (
-          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+          <LoadingData />
         ) : (
           <DataTable columns={columns} rows={technicians} />
         )}

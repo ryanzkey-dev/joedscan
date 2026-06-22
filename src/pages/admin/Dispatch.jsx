@@ -4,6 +4,7 @@ import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import DispatchModal from '../../components/Modals/DispatchModal'
 import RecordDetailsModal from '../../components/Modals/RecordDetailsModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { apiRequest } from '../../utils/sheetsApi'
 
 export default function Dispatch() {
@@ -185,7 +186,7 @@ export default function Dispatch() {
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Pending Subscribers</p>
         {loading ? (
-          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+          <LoadingData />
         ) : (
           <DataTable columns={subscriberColumns} rows={pendingSubscribers} />
         )}
@@ -194,7 +195,7 @@ export default function Dispatch() {
       <div>
         <p className="mb-3 text-sm font-semibold text-gray-700">Job Orders</p>
         {loading ? (
-          <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+          <LoadingData />
         ) : (
           <DataTable columns={jobOrderColumns} rows={jobOrders} />
         )}

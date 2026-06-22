@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Clock, MapPin, CheckCircle, AlertTriangle } from 'lucide-react'
 import AttendancePhotoCapture from '../../components/Attendance/AttendancePhotoCapture'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useAuth } from '../../context/useAuth'
 import { apiRequest } from '../../utils/sheetsApi'
 import {
@@ -156,7 +157,7 @@ export default function Attendance() {
   }
 
   if (checking) {
-    return <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+    return <LoadingData />
   }
 
   if (alreadySubmitted) {

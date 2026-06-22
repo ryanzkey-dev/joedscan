@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, AlertCircle } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useData } from '../../context/useData'
 import { updateTransactionStatus } from '../../utils/sheetsApi'
 
@@ -85,7 +86,7 @@ export default function Transactions() {
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+        <LoadingData />
       ) : (
         <DataTable columns={columns} rows={sorted} />
       )}
