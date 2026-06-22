@@ -235,6 +235,35 @@ function updateTransactionStatus(data) {
   return jsonResponse({ status: 'error', message: 'Transaction ID not found.' })
 }
 
+function updateRawData(data) {
+  const sheet = getOrCreateSheet(TRANSACTIONS_SHEET_NAME, TRANSACTIONS_HEADERS)
+  const idColumn = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 0), 1).getValues()
+
+  for (let i = 0; i < idColumn.length; i++) {
+    if (String(idColumn[i][0]) !== String(data.id)) continue
+
+    const row = i + 2
+    const setIfDefined = (header, value) => {
+      if (value === undefined) return
+      sheet.getRange(row, TRANSACTIONS_HEADERS.indexOf(header) + 1).setValue(value)
+    }
+
+    setIfDefined('Date', data.date)
+    setIfDefined('Subscriber', data.subscriber)
+    setIfDefined('Address', data.address)
+    setIfDefined('Project ID', data.projectId)
+    setIfDefined('FOC Prefab Serial', data.focPrefabSerial)
+    setIfDefined('Modem', data.modem)
+    setIfDefined('Telset', data.telset)
+    setIfDefined('IPTV CCA No', data.iptvCcaNo)
+    setIfDefined('Status', data.status)
+
+    return jsonResponse({ status: 'success' })
+  }
+
+  return jsonResponse({ status: 'error', message: 'Transaction ID not found.' })
+}
+
 function doPost(e) {
   const data = JSON.parse(e.postData.contents)
 
@@ -250,6 +279,9 @@ function doPost(e) {
   }
   if (data.formType === 'encoding') {
     return saveEncoding(data)
+  }
+  if (data.formType === 'updateRawData') {
+    return updateRawData(data)
   }
 
   // Backwards compatibility for older clients without formType.

@@ -7,7 +7,7 @@ import DashboardLayout from './components/Layout/DashboardLayout'
 import Login from './pages/Login'
 import AdminOverview from './pages/admin/AdminOverview'
 import AddTechnician from './pages/admin/AddTechnician'
-import Subscribers from './pages/admin/Subscribers'
+import RawData from './pages/admin/RawData'
 import Dispatch from './pages/admin/Dispatch'
 import Repair from './pages/admin/Repair'
 import Inventory from './pages/admin/Inventory'
@@ -54,11 +54,11 @@ function App() {
               }
             />
             <Route
-              path="/admin/subscribers"
+              path="/admin/raw-data"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
-                    <Subscribers />
+                    <RawData />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

@@ -8,12 +8,12 @@ const STYLES = {
   Cancelled: 'bg-red-50 text-red-700',
 }
 
-export default function StatusBadge({ status }) {
+export default function StatusBadge({ status, className = '' }) {
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
         STYLES[status] || 'bg-gray-100 text-gray-600'
-      }`}
+      } ${className}`}
     >
       {status}
     </span>

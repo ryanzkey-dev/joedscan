@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   UserPlus,
-  Users,
+  Database,
   Package,
   ClipboardList,
   LogOut,
@@ -14,7 +14,7 @@ import {
 
 const ADMIN_MENU = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
-  { label: 'Subscribers', to: '/admin/subscribers', icon: Users },
+  { label: 'Raw Data', to: '/admin/raw-data', icon: Database },
   { label: 'Dispatch', to: '/admin/dispatch', icon: Send },
   { label: 'Repair', to: '/admin/repair', icon: Wrench },
   { label: 'Inventory / Materials', to: '/admin/inventory', icon: Package },

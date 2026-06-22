@@ -73,6 +73,10 @@ export function updateTransactionStatus(id, status) {
   return postToSheet({ formType: 'updateStatus', id, status })
 }
 
+export function updateRawData(id, updates) {
+  return postToSheet({ formType: 'updateRawData', id, ...updates })
+}
+
 // Generic action-routed call for Dispatch/Repair (and any future module that
 // follows the { action, ...params } convention on the backend).
 export async function apiRequest(action, params = {}) {
