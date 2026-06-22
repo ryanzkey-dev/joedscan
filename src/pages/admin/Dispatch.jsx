@@ -44,6 +44,7 @@ export default function Dispatch() {
   const handleAssign = async (technicianId, technicianName, remarks) => {
     await apiRequest('createJobOrder', {
       subscriberId: assigning.id,
+      projectId: assigning.projectId,
       assignedTechnicianId: technicianId,
       assignedTechnicianName: technicianName,
       remarks,
@@ -63,11 +64,9 @@ export default function Dispatch() {
   }
 
   const subscriberColumns = [
-    { key: 'id', label: 'Subscriber ID' },
     { key: 'subscriberName', label: 'Subscriber Name' },
-    { key: 'mobileNumber', label: 'Mobile Number' },
     { key: 'address', label: 'Address' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'projectId', label: 'Project ID', render: (row) => row.projectId || '-' },
     { key: 'encodedByTechnicianName', label: 'Encoded By Technician' },
     {
       key: 'status',
@@ -102,6 +101,7 @@ export default function Dispatch() {
                   { label: 'Subscriber ID', value: row.id },
                   { label: 'Subscriber Name', value: row.subscriberName },
                   { label: 'Address', value: row.address },
+                  { label: 'Project ID', value: row.projectId },
                   { label: 'Serial Number', value: row.serialNumber },
                   { label: 'Encoded By', value: row.encodedByTechnicianName },
                   { label: 'Status', value: row.status },
@@ -120,10 +120,9 @@ export default function Dispatch() {
   ]
 
   const jobOrderColumns = [
-    { key: 'id', label: 'Job Order ID' },
     { key: 'subscriberName', label: 'Subscriber Name' },
     { key: 'address', label: 'Address' },
-    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'projectId', label: 'Project ID', render: (row) => row.projectId || '-' },
     { key: 'assignedTechnicianName', label: 'Assigned Technician' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
@@ -153,7 +152,7 @@ export default function Dispatch() {
                   { label: 'Job Order ID', value: row.id },
                   { label: 'Subscriber Name', value: row.subscriberName },
                   { label: 'Address', value: row.address },
-                  { label: 'Serial Number', value: row.serialNumber },
+                  { label: 'Project ID', value: row.projectId },
                   { label: 'Encoded By', value: row.encodedByTechnicianName },
                   { label: 'Assigned Technician', value: row.assignedTechnicianName },
                   { label: 'Status', value: row.status },
@@ -208,7 +207,7 @@ export default function Dispatch() {
           details={[
             { label: 'Subscriber Name', value: assigning.subscriberName },
             { label: 'Address', value: assigning.address },
-            { label: 'Serial Number', value: assigning.serialNumber },
+            { label: 'Project ID', value: assigning.projectId },
           ]}
           technicians={technicians}
           onConfirm={handleAssign}
@@ -223,7 +222,7 @@ export default function Dispatch() {
           details={[
             { label: 'Subscriber Name', value: moving.subscriberName },
             { label: 'Address', value: moving.address },
-            { label: 'Serial Number', value: moving.serialNumber },
+            { label: 'Project ID', value: moving.projectId },
           ]}
           currentTechnicianName={moving.assignedTechnicianName}
           technicians={technicians}
