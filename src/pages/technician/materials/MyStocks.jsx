@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Eye, CheckCircle2, AlertCircle } from 'lucide-react'
 import DataTable from '../../../components/Tables/DataTable'
 import StatusBadge from '../../../components/Tables/StatusBadge'
@@ -12,6 +12,7 @@ export default function MyStocks() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [viewing, setViewing] = useState(null)
+  const [activeTab, setActiveTab] = useState('ALL')
 
   const load = async () => {
     setLoading(true)
@@ -46,6 +47,16 @@ export default function MyStocks() {
       setError(err.message)
     }
   }
+
+  const productTabs = useMemo(
+    () => ['ALL', ...new Set(stocks.map((item) => item.materialName).filter(Boolean))],
+    [stocks]
+  )
+
+  const filteredStocks = useMemo(
+    () => (activeTab === 'ALL' ? stocks : stocks.filter((item) => item.materialName === activeTab)),
+    [stocks, activeTab]
+  )
 
   const columns = [
     { key: 'materialName', label: 'Material Name' },
@@ -110,10 +121,37 @@ export default function MyStocks() {
         </div>
       )}
 
+      {!loading && stocks.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {productTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow'
+                  : 'border border-gray-200 bg-white text-gray-700 hover:bg-orange-50'
+              }`}
+            >
+              {tab.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+      ) : stocks.length === 0 ? (
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">
+          No materials assigned to you yet.
+        </div>
+      ) : filteredStocks.length === 0 ? (
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">
+          No stocks found for this product.
+        </div>
       ) : (
-        <DataTable columns={columns} rows={stocks} />
+        <DataTable columns={columns} rows={filteredStocks} />
       )}
 
       {viewing && (
