@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import xqPortalLogo from '../../assets/xq-portal-logo.jpg'
 import {
   LayoutDashboard,
   UserPlus,
@@ -139,11 +140,18 @@ export default function Sidebar({ role, isOpen, onClose, onLogout }) {
         }`}
       >
         <div className="flex items-center justify-between bg-gradient-to-br from-red-600 via-orange-500 to-orange-400 px-5 py-5">
-          <div>
-            <p className="text-lg font-bold text-white">JOEDSCAN</p>
-            <p className="text-xs text-white/80">
-              {role === 'admin' ? 'Admin Panel' : 'Technician Panel'}
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={xqPortalLogo}
+              alt="XQ Portal Logo"
+              className="h-10 w-10 shrink-0 rounded-md object-contain"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-lg font-bold leading-none text-white">XQ PORTAL</p>
+              <p className="text-xs text-white/80">
+                {role === 'admin' ? 'Admin Panel' : 'Technician Panel'}
+              </p>
+            </div>
           </div>
           <button
             type="button"

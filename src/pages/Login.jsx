@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
+import xqPortalLogo from '../assets/xq-portal-logo.jpg'
 
 export default function Login() {
   const { login } = useAuth()
@@ -30,7 +31,12 @@ export default function Login() {
     <div className="flex min-h-svh items-center justify-center bg-gradient-to-br from-red-600 via-orange-500 to-orange-400 px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">JOEDSCAN</h1>
+          <img
+            src={xqPortalLogo}
+            alt="XQ Portal Logo"
+            className="mx-auto h-16 w-16 rounded-xl object-contain md:h-20 md:w-20"
+          />
+          <h1 className="mt-3 text-2xl font-bold text-gray-800 md:text-3xl">XQ PORTAL</h1>
           <p className="mt-1 text-sm text-gray-500">Technician Dashboard Login</p>
         </div>
 
