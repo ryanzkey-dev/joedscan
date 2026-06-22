@@ -304,6 +304,12 @@ function addRepairTicket(data) {
     now,
   ])
 
+  // Sheets auto-converts a numeric-looking mobileNumber into a Number, dropping any leading
+  // zero (e.g. '09123456789' -> 9123456789). Force it back to plain text immediately after.
+  const lastRow = sheet.getLastRow()
+  const mobileNumberCol = REPAIRTICKETS_HEADERS.indexOf('mobileNumber') + 1
+  sheet.getRange(lastRow, mobileNumberCol).setNumberFormat('@').setValue(data.mobileNumber || '')
+
   logActivity('repair', 'Repair Ticket Created', 'Repair ticket ' + id + ' created for ' + data.subscriberName, '', '')
   return jsonResponse({ status: 'success', id })
 }
@@ -346,6 +352,12 @@ function bulkAddRepairTickets(data) {
       now,
       now,
     ])
+
+    // Force mobileNumber back to plain text (see addRepairTicket for why).
+    const lastRow = sheet.getLastRow()
+    const mobileNumberCol = REPAIRTICKETS_HEADERS.indexOf('mobileNumber') + 1
+    sheet.getRange(lastRow, mobileNumberCol).setNumberFormat('@').setValue(ticket.mobileNumber)
+
     addedCount++
   })
 
