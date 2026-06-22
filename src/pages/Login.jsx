@@ -37,7 +37,7 @@ export default function Login() {
             className="mx-auto h-16 w-16 rounded-xl object-contain md:h-20 md:w-20"
           />
           <h1 className="mt-3 text-2xl font-bold text-gray-800 md:text-3xl">XQ PORTAL</h1>
-          <p className="mt-1 text-sm text-gray-500">Technician Dashboard Login</p>
+          <p className="mt-1 text-sm text-gray-500">Dashboard Login</p>
         </div>
 
         {error && (
