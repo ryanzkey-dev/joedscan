@@ -95,7 +95,7 @@ function routeDispatchRepairAction(action, data) {
     case 'updateRepairStatus':
       return updateRepairStatus(data)
     default:
-      return jsonResponse({ status: 'error', message: 'Unknown action: ' + action })
+      return routeMaterialsAction(action, data)
   }
 }
 

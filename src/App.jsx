@@ -10,13 +10,18 @@ import AddTechnician from './pages/admin/AddTechnician'
 import RawData from './pages/admin/RawData'
 import Dispatch from './pages/admin/Dispatch'
 import Repair from './pages/admin/Repair'
-import Inventory from './pages/admin/Inventory'
+import AddMaterials from './pages/admin/materials/AddMaterials'
+import SendMaterials from './pages/admin/materials/SendMaterials'
+import AdminTransferMaterials from './pages/admin/materials/TransferMaterials'
+import Inventory from './pages/admin/materials/Inventory'
 import Transactions from './pages/admin/Transactions'
 import TechnicianDashboard from './pages/technician/TechnicianDashboard'
 import TechnicianForm from './pages/technician/TechnicianForm'
 import MyEncodedRecords from './pages/technician/MyEncodedRecords'
 import AssignedJobOrders from './pages/technician/AssignedJobOrders'
 import AssignedRepairs from './pages/technician/AssignedRepairs'
+import MyStocks from './pages/technician/materials/MyStocks'
+import TechnicianTransferMaterials from './pages/technician/materials/TransferMaterials'
 
 function HomeRedirect() {
   const { user } = useAuth()
@@ -84,7 +89,37 @@ function App() {
               }
             />
             <Route
-              path="/admin/inventory"
+              path="/admin/materials/add"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <AddMaterials />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/materials/send"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <SendMaterials />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/materials/transfer"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <AdminTransferMaterials />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/materials/inventory"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
@@ -151,6 +186,26 @@ function App() {
                 <ProtectedRoute role="technician">
                   <DashboardLayout>
                     <AssignedRepairs />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/materials/my-stocks"
+              element={
+                <ProtectedRoute role="technician">
+                  <DashboardLayout>
+                    <MyStocks />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/materials/transfer"
+              element={
+                <ProtectedRoute role="technician">
+                  <DashboardLayout>
+                    <TechnicianTransferMaterials />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

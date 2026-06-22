@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,7 +15,7 @@ import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import { useData } from '../../context/useData'
-import { getMaterials } from '../../utils/storage'
+import { apiRequest } from '../../utils/sheetsApi'
 
 function groupCount(items, keyFn) {
   const map = new Map()
@@ -28,7 +28,13 @@ function groupCount(items, keyFn) {
 
 export default function AdminOverview() {
   const { technicians, transactions, loading, error } = useData()
-  const materials = getMaterials()
+  const [materials, setMaterials] = useState([])
+
+  useEffect(() => {
+    apiRequest('getMaterialStocks')
+      .then((res) => setMaterials(res.materialStocks || []))
+      .catch(() => setMaterials([]))
+  }, [])
 
   const completed = transactions.filter((t) => t.status === 'Completed').length
   const pending = transactions.filter((t) => t.status === 'Pending').length
@@ -50,7 +56,7 @@ export default function AdminOverview() {
   const inventorySummary = useMemo(() => {
     const sums = new Map()
     materials.forEach((m) => {
-      sums.set(m.category, (sums.get(m.category) || 0) + Number(m.quantity || 0))
+      sums.set(m.materialName, (sums.get(m.materialName) || 0) + Number(m.quantity || 0))
     })
     return Array.from(sums.entries()).map(([category, quantity]) => ({ category, quantity }))
   }, [materials])

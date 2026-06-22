@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   UserPlus,
@@ -9,6 +10,10 @@ import {
   FileText,
   Send,
   Wrench,
+  Plus,
+  ArrowRightLeft,
+  Boxes,
+  ChevronDown,
   X,
 } from 'lucide-react'
 
@@ -17,7 +22,16 @@ const ADMIN_MENU = [
   { label: 'Raw Data', to: '/admin/raw-data', icon: Database },
   { label: 'Dispatch', to: '/admin/dispatch', icon: Send },
   { label: 'Repair', to: '/admin/repair', icon: Wrench },
-  { label: 'Inventory / Materials', to: '/admin/inventory', icon: Package },
+  {
+    label: 'Materials',
+    icon: Package,
+    children: [
+      { label: 'Add Materials', to: '/admin/materials/add', icon: Plus },
+      { label: 'Send Materials', to: '/admin/materials/send', icon: Send },
+      { label: 'Transfer Materials', to: '/admin/materials/transfer', icon: ArrowRightLeft },
+      { label: 'Inventory', to: '/admin/materials/inventory', icon: Boxes },
+    ],
+  },
   { label: 'Add Technician', to: '/admin/add-technician', icon: UserPlus },
   { label: 'Transactions', to: '/admin/transactions', icon: ClipboardList },
 ]
@@ -28,7 +42,80 @@ const TECH_MENU = [
   { label: 'My Encoded Records', to: '/technician/records', icon: ClipboardList },
   { label: 'Assigned Job Orders', to: '/technician/assigned-job-orders', icon: Send },
   { label: 'Assigned Repairs', to: '/technician/assigned-repairs', icon: Wrench },
+  {
+    label: 'Material',
+    icon: Package,
+    children: [
+      { label: 'My Stocks', to: '/technician/materials/my-stocks', icon: Boxes },
+      { label: 'Transfer Materials', to: '/technician/materials/transfer', icon: ArrowRightLeft },
+    ],
+  },
 ]
+
+function NavItem({ item, onClose }) {
+  const location = useLocation()
+  const hasActiveChild = item.children?.some((child) => location.pathname.startsWith(child.to))
+  const [open, setOpen] = useState(Boolean(hasActiveChild))
+
+  if (!item.children) {
+    const Icon = item.icon
+    return (
+      <NavLink
+        to={item.to}
+        end={item.end}
+        onClick={onClose}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+            isActive ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-100'
+          }`
+        }
+      >
+        <Icon size={18} />
+        {item.label}
+      </NavLink>
+    )
+  }
+
+  const GroupIcon = item.icon
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+          hasActiveChild ? 'text-orange-700' : 'text-gray-600 hover:bg-gray-100'
+        }`}
+      >
+        <GroupIcon size={18} />
+        <span className="flex-1">{item.label}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-gray-100 pl-3">
+          {item.children.map((child) => {
+            const ChildIcon = child.icon
+            return (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    isActive ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <ChildIcon size={16} />
+                {child.label}
+              </NavLink>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Sidebar({ role, isOpen, onClose, onLogout }) {
   const menu = role === 'admin' ? ADMIN_MENU : TECH_MENU
@@ -44,7 +131,7 @@ export default function Sidebar({ role, isOpen, onClose, onLogout }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-white shadow-lg transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto bg-white shadow-lg transition-transform lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -66,23 +153,8 @@ export default function Sidebar({ role, isOpen, onClose, onLogout }) {
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
-          {menu.map(({ label, to, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-orange-50 text-orange-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`
-              }
-            >
-              <Icon size={18} />
-              {label}
-            </NavLink>
+          {menu.map((item) => (
+            <NavItem key={item.label} item={item} onClose={onClose} />
           ))}
 
           <button

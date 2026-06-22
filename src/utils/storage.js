@@ -1,18 +1,13 @@
-import { generateId } from './idGenerator'
-
-const KEYS = {
-  materials: 'materials',
-  loggedInUser: 'loggedInUser',
-}
-
 // Bump this whenever a data-shape change should auto-reset existing
 // localStorage instead of requiring users to manually clear it.
-const CURRENT_DATA_VERSION = 3
+const CURRENT_DATA_VERSION = 4
 const DATA_VERSION_KEY = 'dataVersion'
 
 // Keys used by older versions of this app that no longer apply now that
-// technicians/transactions/subscribers live in Google Sheets.
-const LEGACY_KEYS = ['users', 'technicians', 'transactions', 'subscribers']
+// technicians/transactions/subscribers/materials live in Google Sheets.
+const LEGACY_KEYS = ['users', 'technicians', 'transactions', 'subscribers', 'materials']
+
+const LOGGED_IN_USER_KEY = 'loggedInUser'
 
 function read(key, fallback) {
   try {
@@ -27,40 +22,9 @@ function write(key, value) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-export const getMaterials = () => read(KEYS.materials, [])
-export const saveMaterials = (materials) => write(KEYS.materials, materials)
-
-export const getLoggedInUser = () => read(KEYS.loggedInUser, null)
-export const setLoggedInUser = (user) => write(KEYS.loggedInUser, user)
-export const clearLoggedInUser = () => localStorage.removeItem(KEYS.loggedInUser)
-
-export function addMaterial({ materialName, category, quantity, unit, serialNumber, remarks }) {
-  const materials = getMaterials()
-  const id = generateId('MAT', materials.map((m) => m.id))
-  const record = {
-    id,
-    materialName,
-    category,
-    quantity: Number(quantity) || 0,
-    unit,
-    serialNumber: serialNumber || '',
-    remarks: remarks || '',
-    createdAt: new Date().toISOString(),
-  }
-  saveMaterials([...materials, record])
-  return record
-}
-
-export function updateMaterial(id, updates) {
-  const materials = getMaterials().map((m) =>
-    m.id === id ? { ...m, ...updates, quantity: Number(updates.quantity) || 0 } : m
-  )
-  saveMaterials(materials)
-}
-
-export function deleteMaterial(id) {
-  saveMaterials(getMaterials().filter((m) => m.id !== id))
-}
+export const getLoggedInUser = () => read(LOGGED_IN_USER_KEY, null)
+export const setLoggedInUser = (user) => write(LOGGED_IN_USER_KEY, user)
+export const clearLoggedInUser = () => localStorage.removeItem(LOGGED_IN_USER_KEY)
 
 export function cleanupLegacyStorage() {
   const storedVersion = Number(localStorage.getItem(DATA_VERSION_KEY) || 0)
