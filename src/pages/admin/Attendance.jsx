@@ -160,7 +160,7 @@ export default function AdminAttendance() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full space-y-6 overflow-hidden">
       <h1 className="text-xl font-bold text-gray-800">Attendance</h1>
 
       {error && (

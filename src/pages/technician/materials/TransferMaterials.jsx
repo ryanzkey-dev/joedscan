@@ -18,6 +18,7 @@ export default function TechnicianTransferMaterials() {
 
   const [materialStockId, setMaterialStockId] = useState('')
   const [toTechnicianId, setToTechnicianId] = useState('')
+  const [toTechnicianName, setToTechnicianName] = useState('')
   const [remarks, setRemarks] = useState('')
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -32,7 +33,7 @@ export default function TechnicianTransferMaterials() {
         apiRequest('getMaterialTransactions', { transactionType: 'TECHNICIAN_TRANSFER' }),
       ])
       setMyStocks((stocksRes.materialStocks || []).filter((s) => s.status === 'On Hand'))
-      setTechnicians((techRes.technicians || []).filter((t) => t.id !== user.id))
+      setTechnicians((techRes.technicians || []).filter((t) => String(t.id) !== String(user.id)))
       setHistory((historyRes.materialTransactions || []).filter((h) => h.fromOwnerId === user.id))
     } catch (err) {
       setError(err.message)
@@ -47,9 +48,16 @@ export default function TechnicianTransferMaterials() {
   }, [])
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
+  const handleToTechnicianChange = (e) => {
+    const selectedId = e.target.value
+    const selectedTech = technicians.find((t) => String(t.id) === String(selectedId))
+
+    setToTechnicianId(selectedId)
+    setToTechnicianName(selectedTech?.fullName || selectedTech?.name || '')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const toTech = technicians.find((t) => t.id === toTechnicianId)
     const next = {}
     if (!materialStockId) next.materialStockId = 'Select a material'
     if (!toTechnicianId) next.toTechnicianId = 'Select recipient technician'
@@ -64,7 +72,7 @@ export default function TechnicianTransferMaterials() {
         fromTechnicianId: user.id,
         fromTechnicianName: user.fullName,
         toTechnicianId,
-        toTechnicianName: toTech.fullName,
+        toTechnicianName,
         remarks: remarks.trim(),
         userId: user.id,
         userName: user.fullName,
@@ -72,6 +80,7 @@ export default function TechnicianTransferMaterials() {
       await load()
       setMaterialStockId('')
       setToTechnicianId('')
+      setToTechnicianName('')
       setRemarks('')
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -135,11 +144,11 @@ export default function TechnicianTransferMaterials() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Recipient Technician</label>
-            <select value={toTechnicianId} onChange={(e) => setToTechnicianId(e.target.value)} className={inputClasses}>
-              <option value="">Select technician</option>
+            <select value={toTechnicianId} onChange={handleToTechnicianChange} className={inputClasses}>
+              <option value="">Select Technician Recipient</option>
               {technicians.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.fullName}
+                  {t.fullName || t.name}
                 </option>
               ))}
             </select>

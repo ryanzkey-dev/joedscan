@@ -23,14 +23,14 @@ export default function DashboardLayout({ children }) {
         onLogout={handleLogout}
       />
 
-      <div className="flex min-h-svh flex-1 flex-col">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <Topbar
           fullName={user?.fullName}
           role={user?.role}
           onMenuClick={() => setSidebarOpen(true)}
           onLogout={handleLogout}
         />
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 lg:p-6">{children}</main>
       </div>
     </div>
   )

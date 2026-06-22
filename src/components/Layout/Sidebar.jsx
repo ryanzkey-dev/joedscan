@@ -135,7 +135,7 @@ export default function Sidebar({ role, isOpen, onClose, onLogout }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto bg-white shadow-lg transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto overflow-x-hidden bg-white shadow-lg transition-transform lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -163,7 +163,7 @@ export default function Sidebar({ role, isOpen, onClose, onLogout }) {
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1 p-3">
+        <nav className="flex flex-col gap-1 overflow-x-hidden p-3">
           {menu.map((item) => (
             <NavItem key={item.label} item={item} onClose={onClose} />
           ))}

@@ -19,6 +19,7 @@ export default function TransferMaterials() {
   const [fromTechnicianId, setFromTechnicianId] = useState('')
   const [materialStockId, setMaterialStockId] = useState('')
   const [toTechnicianId, setToTechnicianId] = useState('')
+  const [toTechnicianName, setToTechnicianName] = useState('')
   const [remarks, setRemarks] = useState('')
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -47,16 +48,28 @@ export default function TransferMaterials() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const availableStocks = useMemo(
-    () => stocks.filter((s) => s.currentOwnerId === fromTechnicianId && s.status === 'On Hand'),
+    () => stocks.filter((s) => String(s.currentOwnerId) === String(fromTechnicianId) && s.status === 'On Hand'),
     [stocks, fromTechnicianId]
   )
 
   const onHandStocks = useMemo(() => stocks.filter((s) => s.status === 'On Hand'), [stocks])
 
+  const availableRecipients = useMemo(
+    () => technicians.filter((t) => String(t.id) !== String(fromTechnicianId)),
+    [technicians, fromTechnicianId]
+  )
+
+  const handleToTechnicianChange = (e) => {
+    const selectedId = e.target.value
+    const selectedTech = technicians.find((t) => String(t.id) === String(selectedId))
+
+    setToTechnicianId(selectedId)
+    setToTechnicianName(selectedTech?.fullName || selectedTech?.name || '')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const fromTech = technicians.find((t) => t.id === fromTechnicianId)
-    const toTech = technicians.find((t) => t.id === toTechnicianId)
+    const fromTech = technicians.find((t) => String(t.id) === String(fromTechnicianId))
     const next = {}
     if (!fromTechnicianId) next.fromTechnicianId = 'Select current technician'
     if (!materialStockId) next.materialStockId = 'Select a material'
@@ -72,7 +85,7 @@ export default function TransferMaterials() {
         fromTechnicianId,
         fromTechnicianName: fromTech.fullName,
         toTechnicianId,
-        toTechnicianName: toTech.fullName,
+        toTechnicianName,
         remarks: remarks.trim(),
         userId: user.id,
         userName: user.fullName,
@@ -80,6 +93,7 @@ export default function TransferMaterials() {
       await load()
       setMaterialStockId('')
       setToTechnicianId('')
+      setToTechnicianName('')
       setRemarks('')
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -165,15 +179,13 @@ export default function TransferMaterials() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">New Technician</label>
-            <select value={toTechnicianId} onChange={(e) => setToTechnicianId(e.target.value)} className={inputClasses}>
-              <option value="">Select technician</option>
-              {technicians
-                .filter((t) => t.id !== fromTechnicianId)
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.fullName}
-                  </option>
-                ))}
+            <select value={toTechnicianId} onChange={handleToTechnicianChange} className={inputClasses}>
+              <option value="">Select Technician Recipient</option>
+              {availableRecipients.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.fullName || t.name}
+                </option>
+              ))}
             </select>
             {formErrors.toTechnicianId && <p className="mt-1 text-xs text-red-600">{formErrors.toTechnicianId}</p>}
           </div>
