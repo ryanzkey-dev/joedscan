@@ -14,6 +14,7 @@ import DataTable from '../../components/Tables/DataTable'
 import PriorityBadge from '../../components/Tables/PriorityBadge'
 import DispatchModal from '../../components/Modals/DispatchModal'
 import RecordDetailsModal from '../../components/Modals/RecordDetailsModal'
+import LoadingData from '../../components/Loading/LoadingData'
 import { useAuth } from '../../context/useAuth'
 import { apiRequest } from '../../utils/sheetsApi'
 
@@ -45,7 +46,7 @@ const BULK_COLUMN_KEYS = [
   'status',
 ]
 
-const DEFAULT_BULK_ROW_COUNT = 10
+const DEFAULT_BULK_ROW_COUNT = 2
 
 function createEmptyRepairRow() {
   return {
@@ -859,7 +860,7 @@ export default function Repair() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+            <LoadingData />
           ) : (
             <DataTable columns={columns} rows={filtered} />
           )}
