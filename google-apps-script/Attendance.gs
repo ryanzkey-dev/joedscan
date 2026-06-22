@@ -100,6 +100,16 @@ function addAttendance(data) {
     now,
   ])
 
+  // Sheets auto-converts 'YYYY-MM-DD' and 'HH:mm:ss' strings into Date values on write
+  // (the classic Dec-30-1899 time-only epoch for timeIn), which breaks the technicianId+date
+  // duplicate check and the frontend's plain-string parsing. Force these two columns back to
+  // plain text immediately after the append.
+  const lastRow = sheet.getLastRow()
+  const dateCol = ATTENDANCE_HEADERS.indexOf('date') + 1
+  const timeInCol = ATTENDANCE_HEADERS.indexOf('timeIn') + 1
+  sheet.getRange(lastRow, dateCol).setNumberFormat('@').setValue(data.date || '')
+  sheet.getRange(lastRow, timeInCol).setNumberFormat('@').setValue(data.timeIn || '')
+
   logActivity(
     'attendance',
     'Attendance Submitted',
