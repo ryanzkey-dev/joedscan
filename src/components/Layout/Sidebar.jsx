@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   Boxes,
   ChevronDown,
+  Calendar,
   X,
 } from 'lucide-react'
 
@@ -32,12 +33,14 @@ const ADMIN_MENU = [
       { label: 'Inventory', to: '/admin/materials/inventory', icon: Boxes },
     ],
   },
+  { label: 'Attendance', to: '/admin/attendance', icon: Calendar },
   { label: 'Add Technician', to: '/admin/add-technician', icon: UserPlus },
   { label: 'Transactions', to: '/admin/transactions', icon: ClipboardList },
 ]
 
 const TECH_MENU = [
   { label: 'Dashboard', to: '/technician', icon: LayoutDashboard, end: true },
+  { label: 'Attendance', to: '/technician/attendance', icon: Calendar },
   { label: 'Form', to: '/technician/form', icon: FileText },
   { label: 'My Encoded Records', to: '/technician/records', icon: ClipboardList },
   { label: 'Assigned Job Orders', to: '/technician/assigned-job-orders', icon: Send },

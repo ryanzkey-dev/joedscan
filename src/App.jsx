@@ -15,6 +15,7 @@ import SendMaterials from './pages/admin/materials/SendMaterials'
 import AdminTransferMaterials from './pages/admin/materials/TransferMaterials'
 import Inventory from './pages/admin/materials/Inventory'
 import Transactions from './pages/admin/Transactions'
+import AdminAttendance from './pages/admin/Attendance'
 import TechnicianDashboard from './pages/technician/TechnicianDashboard'
 import TechnicianForm from './pages/technician/TechnicianForm'
 import MyEncodedRecords from './pages/technician/MyEncodedRecords'
@@ -22,6 +23,7 @@ import AssignedJobOrders from './pages/technician/AssignedJobOrders'
 import AssignedRepairs from './pages/technician/AssignedRepairs'
 import MyStocks from './pages/technician/materials/MyStocks'
 import TechnicianTransferMaterials from './pages/technician/materials/TransferMaterials'
+import TechnicianAttendance from './pages/technician/Attendance'
 
 function HomeRedirect() {
   const { user } = useAuth()
@@ -138,6 +140,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/attendance"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <AdminAttendance />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/technician"
@@ -165,6 +177,16 @@ function App() {
                 <ProtectedRoute role="technician">
                   <DashboardLayout>
                     <MyEncodedRecords />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/technician/attendance"
+              element={
+                <ProtectedRoute role="technician">
+                  <DashboardLayout>
+                    <TechnicianAttendance />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

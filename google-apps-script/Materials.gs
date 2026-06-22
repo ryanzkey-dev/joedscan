@@ -75,7 +75,7 @@ function routeMaterialsAction(action, data) {
     case 'getMaterialTransactions':
       return getMaterialTransactions(data)
     default:
-      return jsonResponse({ status: 'error', message: 'Unknown action: ' + action })
+      return routeAttendanceAction(action, data)
   }
 }
 
