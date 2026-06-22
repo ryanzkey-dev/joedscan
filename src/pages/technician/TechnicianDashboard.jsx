@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, ClipboardList, Clock, CheckCircle, Hammer, Wrench } from 'lucide-react'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
 import LoadingData from '../../components/Loading/LoadingData'
@@ -28,20 +28,37 @@ const PENDING_STATUSES = ['Pending', 'Dispatched', 'In Progress']
 const selectClasses =
   'rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
 
-function StatBox({ label, value, breakdown, accent }) {
+function SummaryCard({ title, total, pr, war, icon: Icon }) {
   return (
-    <div
-      className={`rounded-xl p-4 ${
-        accent ? 'bg-gradient-to-br from-red-600 to-orange-500 text-white' : 'bg-orange-50 text-gray-800'
-      }`}
-    >
-      <p className={`text-xs font-semibold uppercase tracking-wide ${accent ? 'text-white/80' : 'text-gray-500'}`}>
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-bold">{value}</p>
-      {breakdown && (
-        <p className={`mt-1 text-xs ${accent ? 'text-white/80' : 'text-gray-500'}`}>{breakdown}</p>
-      )}
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-semibold text-gray-500">{title}</p>
+          <h3 className="mt-4 text-3xl font-bold text-gray-900">{total}</h3>
+        </div>
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 text-white">
+          <Icon className="h-6 w-6" />
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-gray-600">
+            <Hammer className="h-4 w-4 text-orange-600" />
+            PR
+          </span>
+          <span className="font-bold">{pr}</span>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-gray-600">
+            <Wrench className="h-4 w-4 text-red-600" />
+            WAR
+          </span>
+          <span className="font-bold">{war}</span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -135,6 +152,30 @@ export default function TechnicianDashboard() {
     return Array.from(map.entries()).map(([date, count]) => ({ date, count })).slice(-10)
   }, [myTransactions])
 
+  const dashboardCards = [
+    {
+      title: 'TOTAL JOB ORDER',
+      total: summary.total,
+      pr: summary.prTotal,
+      war: summary.warTotal,
+      icon: ClipboardList,
+    },
+    {
+      title: 'PENDING',
+      total: summary.totalPending,
+      pr: summary.prPending,
+      war: summary.warPending,
+      icon: Clock,
+    },
+    {
+      title: 'COMPLETED',
+      total: summary.totalCompleted,
+      pr: summary.prCompleted,
+      war: summary.warCompleted,
+      icon: CheckCircle,
+    },
+  ]
+
   const sorted = [...myTransactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   const columns = [
@@ -167,11 +208,11 @@ export default function TechnicianDashboard() {
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">TOTAL JOB ORDER</h2>
-            <p className="text-sm text-gray-500">PR and WAR summary</p>
+            <h2 className="text-xl font-bold text-gray-800">Job Order Summary</h2>
+            <p className="text-sm text-gray-500">PR and WAR breakdown</p>
           </div>
 
           <div className="flex gap-2">
@@ -203,20 +244,17 @@ export default function TechnicianDashboard() {
         {summaryLoading ? (
           <LoadingData />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <StatBox label="Total" value={summary.total} accent />
-            <StatBox label="PR" value={summary.prTotal} />
-            <StatBox label="WAR" value={summary.warTotal} />
-            <StatBox
-              label="Pending"
-              value={summary.totalPending}
-              breakdown={`PR: ${summary.prPending} | WAR: ${summary.warPending}`}
-            />
-            <StatBox
-              label="Completed"
-              value={summary.totalCompleted}
-              breakdown={`PR: ${summary.prCompleted} | WAR: ${summary.warCompleted}`}
-            />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {dashboardCards.map((card) => (
+              <SummaryCard
+                key={card.title}
+                title={card.title}
+                total={card.total}
+                pr={card.pr}
+                war={card.war}
+                icon={card.icon}
+              />
+            ))}
           </div>
         )}
       </div>
