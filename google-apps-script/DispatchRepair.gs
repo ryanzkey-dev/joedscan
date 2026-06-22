@@ -84,6 +84,8 @@ function routeDispatchRepairAction(action, data) {
       return moveJobOrderTechnician(data)
     case 'addRepairTicket':
       return addRepairTicket(data)
+    case 'bulkAddRepairTickets':
+      return bulkAddRepairTickets(data)
     case 'getRepairTickets':
       return getRepairTickets()
     case 'getTechnicianRepairTickets':
@@ -304,6 +306,63 @@ function addRepairTicket(data) {
 
   logActivity('repair', 'Repair Ticket Created', 'Repair ticket ' + id + ' created for ' + data.subscriberName, '', '')
   return jsonResponse({ status: 'success', id })
+}
+
+function bulkAddRepairTickets(data) {
+  const sheet = getOrCreateSheet(REPAIRTICKETS_SHEET_NAME, REPAIRTICKETS_HEADERS)
+  const tickets = data.tickets || []
+  const now = new Date().toISOString()
+  let addedCount = 0
+  let failedCount = 0
+
+  tickets.forEach(function (ticket) {
+    const hasRequired =
+      ticket.subscriberName &&
+      ticket.mobileNumber &&
+      ticket.address &&
+      ticket.issueType &&
+      ticket.issueDescription &&
+      ticket.priority &&
+      ticket.status
+    if (!hasRequired) {
+      failedCount++
+      return
+    }
+
+    const id = nextSequentialId(sheet, 'REP')
+    sheet.appendRow([
+      id,
+      ticket.subscriberName,
+      ticket.mobileNumber,
+      ticket.address,
+      ticket.issueType,
+      ticket.issueDescription,
+      ticket.priority,
+      ticket.remarks || '',
+      ticket.status,
+      '',
+      '',
+      '',
+      now,
+      now,
+    ])
+    addedCount++
+  })
+
+  logActivity(
+    'repair',
+    'Bulk Repair Tickets Added',
+    addedCount + ' repair ticket(s) added via bulk upload',
+    data.userId,
+    data.userName
+  )
+
+  return jsonResponse({
+    status: 'success',
+    message: addedCount + ' repair tickets added successfully.',
+    addedCount: addedCount,
+    failedCount: failedCount,
+  })
 }
 
 function getRepairTickets() {
