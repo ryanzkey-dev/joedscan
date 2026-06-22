@@ -52,7 +52,6 @@ export default function MyStocks() {
     { key: 'serialNumber', label: 'Serial Number', render: (row) => row.serialNumber || '-' },
     { key: 'quantity', label: 'Qty' },
     { key: 'unit', label: 'Unit' },
-    { key: 'pcs', label: 'PCS' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
       key: 'createdAt',
@@ -84,7 +83,6 @@ export default function MyStocks() {
                   { label: 'Serial Number', value: row.serialNumber },
                   { label: 'Quantity', value: row.quantity },
                   { label: 'Unit', value: row.unit },
-                  { label: 'PCS', value: row.pcs },
                   { label: 'Status', value: row.status },
                   { label: 'Remarks', value: row.remarks },
                   { label: 'Date Received', value: new Date(row.createdAt).toLocaleString() },

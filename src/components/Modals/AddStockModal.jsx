@@ -9,7 +9,6 @@ export default function AddStockModal({ catalog, onSave, onClose }) {
   const [catalogId, setCatalogId] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [unit, setUnit] = useState('')
-  const [pcs, setPcs] = useState('')
   const [remarks, setRemarks] = useState('')
   const [serialNumbers, setSerialNumbers] = useState([''])
   const [errors, setErrors] = useState({})
@@ -44,7 +43,6 @@ export default function AddStockModal({ catalog, onSave, onClose }) {
     if (!catalogId) next.catalogId = 'Select a material'
     if (!quantity || quantity <= 0) next.quantity = 'Quantity must be greater than 0'
     if (!unit.trim()) next.unit = 'Unit is required'
-    if (!pcs.trim()) next.pcs = 'PCS is required'
 
     if (selectedMaterial?.requiresScanner === 'Yes') {
       const trimmed = serialNumbers.map((s) => s.trim())
@@ -66,7 +64,6 @@ export default function AddStockModal({ catalog, onSave, onClose }) {
         requiresScanner: selectedMaterial.requiresScanner,
         quantity,
         unit: unit.trim(),
-        pcs: pcs.trim(),
         serialNumbers: serialNumbers.map((s) => s.trim()),
         remarks: remarks.trim(),
       })
@@ -111,7 +108,7 @@ export default function AddStockModal({ catalog, onSave, onClose }) {
             {errors.catalogId && <p className="mt-1 text-xs text-red-600">{errors.catalogId}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
               <input
@@ -126,13 +123,9 @@ export default function AddStockModal({ catalog, onSave, onClose }) {
               <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
               <input type="text" value={unit} onChange={(e) => setUnit(e.target.value)} className={inputClasses} />
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">PCS</label>
-              <input type="text" value={pcs} onChange={(e) => setPcs(e.target.value)} className={inputClasses} />
-            </div>
           </div>
-          {(errors.quantity || errors.unit || errors.pcs) && (
-            <p className="text-xs text-red-600">{errors.quantity || errors.unit || errors.pcs}</p>
+          {(errors.quantity || errors.unit) && (
+            <p className="text-xs text-red-600">{errors.quantity || errors.unit}</p>
           )}
 
           {selectedMaterial?.requiresScanner === 'Yes' && (

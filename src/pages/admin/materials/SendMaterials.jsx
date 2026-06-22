@@ -15,7 +15,6 @@ const initialForm = {
   catalogId: '',
   quantity: 1,
   unit: '',
-  pcs: '',
   remarks: '',
 }
 
@@ -95,7 +94,6 @@ export default function SendMaterials() {
     if (!form.catalogId) next.catalogId = 'Select a material'
     if (!form.quantity || form.quantity <= 0) next.quantity = 'Quantity must be greater than 0'
     if (!form.unit.trim()) next.unit = 'Unit is required'
-    if (!form.pcs.trim()) next.pcs = 'PCS is required'
 
     if (selectedMaterial?.requiresScanner === 'Yes') {
       const trimmed = serialNumbers.map((s) => s.trim())
@@ -120,7 +118,6 @@ export default function SendMaterials() {
         requiresScanner: selectedMaterial.requiresScanner,
         quantity: form.quantity,
         unit: form.unit.trim(),
-        pcs: form.pcs.trim(),
         serialNumbers: serialNumbers.map((s) => s.trim()),
         remarks: form.remarks.trim(),
         userId: user.id,
@@ -160,7 +157,6 @@ export default function SendMaterials() {
     { key: 'serialNumber', label: 'Serial Number', render: (row) => row.serialNumber || '-' },
     { key: 'quantity', label: 'Qty' },
     { key: 'unit', label: 'Unit' },
-    { key: 'pcs', label: 'PCS' },
     { key: 'toOwnerName', label: 'Sent To' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     { key: 'remarks', label: 'Remarks', render: (row) => row.remarks || '-' },
@@ -173,7 +169,9 @@ export default function SendMaterials() {
           onClick={() =>
             setViewing({
               title: 'Material Transaction',
-              details: Object.entries(row).map(([label, value]) => ({ label, value: String(value) })),
+              details: Object.entries(row)
+                .filter(([key]) => key !== 'pcs')
+                .map(([label, value]) => ({ label, value: String(value) })),
             })
           }
           className="rounded-lg border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50"
@@ -257,17 +255,6 @@ export default function SendMaterials() {
               className={inputClasses}
             />
             {formErrors.unit && <p className="mt-1 text-xs text-red-600">{formErrors.unit}</p>}
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">PCS</label>
-            <input
-              type="text"
-              value={form.pcs}
-              onChange={(e) => setForm((prev) => ({ ...prev, pcs: e.target.value }))}
-              className={inputClasses}
-            />
-            {formErrors.pcs && <p className="mt-1 text-xs text-red-600">{formErrors.pcs}</p>}
           </div>
         </div>
 

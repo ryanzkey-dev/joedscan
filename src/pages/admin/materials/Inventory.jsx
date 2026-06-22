@@ -83,7 +83,6 @@ export default function Inventory() {
     { key: 'serialNumber', label: 'Serial Number', render: (row) => row.serialNumber || '-' },
     { key: 'quantity', label: 'Qty' },
     { key: 'unit', label: 'Unit' },
-    { key: 'pcs', label: 'PCS' },
     { key: 'currentOwnerName', label: 'Current Owner', render: (row) => row.currentOwnerName || 'Admin' },
     { key: 'currentOwnerType', label: 'Owner Type' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
