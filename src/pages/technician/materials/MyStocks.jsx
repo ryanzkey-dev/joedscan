@@ -6,13 +6,22 @@ import RecordDetailsModal from '../../../components/Modals/RecordDetailsModal'
 import { useAuth } from '../../../context/useAuth'
 import { apiRequest } from '../../../utils/sheetsApi'
 
+const STATUS_TABS = ['AVAILABLE', 'USED']
+
+function matchesStatusTab(status, statusTab) {
+  if (statusTab === 'AVAILABLE') return status === 'On Hand'
+  if (statusTab === 'USED') return status === 'Used'
+  return true
+}
+
 export default function MyStocks() {
   const { user } = useAuth()
   const [stocks, setStocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [viewing, setViewing] = useState(null)
-  const [activeTab, setActiveTab] = useState('ALL')
+  const [activeMaterialTab, setActiveMaterialTab] = useState('ALL')
+  const [activeStatusTab, setActiveStatusTab] = useState('AVAILABLE')
 
   const load = async () => {
     setLoading(true)
@@ -48,14 +57,31 @@ export default function MyStocks() {
     }
   }
 
-  const productTabs = useMemo(
+  const materialTabs = useMemo(
     () => ['ALL', ...new Set(stocks.map((item) => item.materialName).filter(Boolean))],
     [stocks]
   )
 
+  const byMaterial = useMemo(
+    () =>
+      activeMaterialTab === 'ALL'
+        ? stocks
+        : stocks.filter((item) => item.materialName === activeMaterialTab),
+    [stocks, activeMaterialTab]
+  )
+
+  const statusTabCounts = useMemo(
+    () =>
+      STATUS_TABS.reduce((acc, tab) => {
+        acc[tab] = byMaterial.filter((item) => matchesStatusTab(item.status, tab)).length
+        return acc
+      }, {}),
+    [byMaterial]
+  )
+
   const filteredStocks = useMemo(
-    () => (activeTab === 'ALL' ? stocks : stocks.filter((item) => item.materialName === activeTab)),
-    [stocks, activeTab]
+    () => byMaterial.filter((item) => matchesStatusTab(item.status, activeStatusTab)),
+    [byMaterial, activeStatusTab]
   )
 
   const columns = [
@@ -110,6 +136,11 @@ export default function MyStocks() {
     },
   ]
 
+  const emptyMessage =
+    activeMaterialTab === 'ALL'
+      ? `No ${activeStatusTab} materials found.`
+      : `No ${activeStatusTab} materials found for ${activeMaterialTab}.`
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-gray-800">My Stocks</h1>
@@ -122,22 +153,41 @@ export default function MyStocks() {
       )}
 
       {!loading && stocks.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {productTabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                activeTab === tab
-                  ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow'
-                  : 'border border-gray-200 bg-white text-gray-700 hover:bg-orange-50'
-              }`}
-            >
-              {tab.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {materialTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveMaterialTab(tab)}
+                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
+                  activeMaterialTab === tab
+                    ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow'
+                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-orange-50'
+                }`}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveStatusTab(tab)}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                  activeStatusTab === tab
+                    ? 'border border-orange-300 bg-orange-100 text-orange-700'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab} ({statusTabCounts[tab]})
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {loading ? (
@@ -147,9 +197,7 @@ export default function MyStocks() {
           No materials assigned to you yet.
         </div>
       ) : filteredStocks.length === 0 ? (
-        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">
-          No stocks found for this product.
-        </div>
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">{emptyMessage}</div>
       ) : (
         <DataTable columns={columns} rows={filteredStocks} />
       )}

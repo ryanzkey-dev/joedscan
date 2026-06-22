@@ -6,11 +6,17 @@ import AddStockModal from '../../../components/Modals/AddStockModal'
 import { useAuth } from '../../../context/useAuth'
 import { apiRequest } from '../../../utils/sheetsApi'
 
-const STATUS_OPTIONS = ['All', 'Available', 'On Hand', 'Used', 'Transferred', 'Damaged', 'Lost']
 const OWNER_TYPE_OPTIONS = ['All', 'Admin', 'Technician']
+const STATUS_TABS = ['AVAILABLE', 'USED']
 
 const inputClasses =
   'w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
+
+function matchesStatusTab(status, statusTab) {
+  if (statusTab === 'AVAILABLE') return ['Available', 'On Hand'].includes(status)
+  if (statusTab === 'USED') return status === 'Used'
+  return true
+}
 
 export default function Inventory() {
   const { user } = useAuth()
@@ -23,10 +29,10 @@ export default function Inventory() {
   const [showAddStock, setShowAddStock] = useState(false)
 
   const [search, setSearch] = useState('')
-  const [materialFilter, setMaterialFilter] = useState('All')
   const [ownerTypeFilter, setOwnerTypeFilter] = useState('All')
   const [technicianFilter, setTechnicianFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [activeMaterialTab, setActiveMaterialTab] = useState('ALL')
+  const [activeStatusTab, setActiveStatusTab] = useState('AVAILABLE')
 
   const load = async () => {
     setLoading(true)
@@ -61,22 +67,44 @@ export default function Inventory() {
     setTimeout(() => setSuccess(false), 3000)
   }
 
+  const catalogNames = useMemo(
+    () => Array.from(new Set(stocks.map((s) => s.materialName).filter(Boolean))),
+    [stocks]
+  )
+  const materialTabs = ['ALL', ...catalogNames]
+
+  const byMaterial = useMemo(
+    () =>
+      activeMaterialTab === 'ALL'
+        ? stocks
+        : stocks.filter((s) => s.materialName === activeMaterialTab),
+    [stocks, activeMaterialTab]
+  )
+
+  const statusTabCounts = useMemo(
+    () =>
+      STATUS_TABS.reduce((acc, tab) => {
+        acc[tab] = byMaterial.filter((s) => matchesStatusTab(s.status, tab)).length
+        return acc
+      }, {}),
+    [byMaterial]
+  )
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return stocks.filter((s) => {
+    return byMaterial.filter((s) => {
       const matchesSearch =
         !term ||
         s.materialName?.toLowerCase().includes(term) ||
         s.serialNumber?.toLowerCase().includes(term) ||
         s.currentOwnerName?.toLowerCase().includes(term) ||
         s.status?.toLowerCase().includes(term)
-      const matchesMaterial = materialFilter === 'All' || s.catalogId === materialFilter
       const matchesOwnerType = ownerTypeFilter === 'All' || s.currentOwnerType === ownerTypeFilter
       const matchesTechnician = technicianFilter === 'All' || s.currentOwnerId === technicianFilter
-      const matchesStatus = statusFilter === 'All' || s.status === statusFilter
-      return matchesSearch && matchesMaterial && matchesOwnerType && matchesTechnician && matchesStatus
+      const matchesStatus = matchesStatusTab(s.status, activeStatusTab)
+      return matchesSearch && matchesOwnerType && matchesTechnician && matchesStatus
     })
-  }, [stocks, search, materialFilter, ownerTypeFilter, technicianFilter, statusFilter])
+  }, [byMaterial, search, ownerTypeFilter, technicianFilter, activeStatusTab])
 
   const columns = [
     { key: 'materialName', label: 'Material Name' },
@@ -88,6 +116,11 @@ export default function Inventory() {
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     { key: 'createdAt', label: 'Created At', render: (row) => new Date(row.createdAt).toLocaleDateString() },
   ]
+
+  const emptyMessage =
+    activeMaterialTab === 'ALL'
+      ? `No ${activeStatusTab} materials found.`
+      : `No ${activeStatusTab} materials found for ${activeMaterialTab}.`
 
   return (
     <div className="space-y-6">
@@ -117,6 +150,44 @@ export default function Inventory() {
         </div>
       )}
 
+      {!loading && stocks.length > 0 && (
+        <>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {materialTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveMaterialTab(tab)}
+                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${
+                  activeMaterialTab === tab
+                    ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow'
+                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-orange-50'
+                }`}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveStatusTab(tab)}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                  activeStatusTab === tab
+                    ? 'border border-orange-300 bg-orange-100 text-orange-700'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab} ({statusTabCounts[tab]})
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -128,14 +199,6 @@ export default function Inventory() {
             className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
           />
         </div>
-        <select value={materialFilter} onChange={(e) => setMaterialFilter(e.target.value)} className={inputClasses}>
-          <option value="All">All Materials</option>
-          {catalog.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.materialName}
-            </option>
-          ))}
-        </select>
         <select value={ownerTypeFilter} onChange={(e) => setOwnerTypeFilter(e.target.value)} className={inputClasses}>
           {OWNER_TYPE_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>
@@ -151,17 +214,16 @@ export default function Inventory() {
             </option>
           ))}
         </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={inputClasses}>
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
       </div>
 
       {loading ? (
         <p className="text-sm text-gray-400">Loading from Google Sheet...</p>
+      ) : stocks.length === 0 ? (
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">
+          No materials in inventory yet.
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 shadow-sm">{emptyMessage}</div>
       ) : (
         <DataTable columns={columns} rows={filtered} />
       )}
