@@ -8,7 +8,8 @@ import Login from './pages/Login'
 import AdminOverview from './pages/admin/AdminOverview'
 import AddTechnician from './pages/admin/technician/AddTechnician'
 import ViewAllTechnician from './pages/admin/technician/ViewAllTechnician'
-import RawData from './pages/admin/RawData'
+import RawDataInstall from './pages/admin/raw-data/RawDataInstall'
+import RawDataRepair from './pages/admin/raw-data/RawDataRepair'
 import DispatchInstall from './pages/admin/dispatch/DispatchInstall'
 import DispatchRepair from './pages/admin/dispatch/DispatchRepair'
 import Repair from './pages/admin/Repair'
@@ -18,6 +19,7 @@ import AdminTransferMaterials from './pages/admin/materials/TransferMaterials'
 import Inventory from './pages/admin/materials/Inventory'
 import Transactions from './pages/admin/Transactions'
 import AdminAttendance from './pages/admin/Attendance'
+import AdminUser from './pages/admin/AdminUser'
 import TechnicianDashboard from './pages/technician/TechnicianDashboard'
 import TechnicianForm from './pages/technician/TechnicianForm'
 import MyEncodedRecords from './pages/technician/MyEncodedRecords'
@@ -30,7 +32,7 @@ import TechnicianAttendance from './pages/technician/Attendance'
 function HomeRedirect() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
-  return <Navigate to={user.role === 'admin' ? '/admin' : '/technician'} replace />
+  return <Navigate to={user.role === 'admin' ? '/admin/overview' : '/technician'} replace />
 }
 
 function App() {
@@ -42,8 +44,9 @@ function App() {
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
 
+            <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
             <Route
-              path="/admin"
+              path="/admin/overview"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
@@ -52,6 +55,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin/add-technician" element={<Navigate to="/admin/technician/add" replace />} />
             <Route
               path="/admin/technician/add"
               element={
@@ -72,12 +76,23 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin/raw-data" element={<Navigate to="/admin/raw-data/install" replace />} />
             <Route
-              path="/admin/raw-data"
+              path="/admin/raw-data/install"
               element={
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
-                    <RawData />
+                    <RawDataInstall />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/raw-data/repair"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <RawDataRepair />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -168,6 +183,16 @@ function App() {
                 <ProtectedRoute role="admin">
                   <DashboardLayout>
                     <AdminAttendance />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute role="admin">
+                  <DashboardLayout>
+                    <AdminUser />
                   </DashboardLayout>
                 </ProtectedRoute>
               }

@@ -6,9 +6,9 @@ import {
   UserPlus,
   Users,
   Database,
+  Hammer,
   Package,
   ClipboardList,
-  ClipboardCheck,
   LogOut,
   FileText,
   Send,
@@ -18,22 +18,22 @@ import {
   Boxes,
   ChevronDown,
   Calendar,
+  CalendarCheck,
+  UserCog,
   Eye,
   X,
 } from 'lucide-react'
 
 const ADMIN_MENU = [
-  { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
-  { label: 'Raw Data', to: '/admin/raw-data', icon: Database },
+  { label: 'Overview', to: '/admin/overview', icon: LayoutDashboard, end: true },
   {
-    label: 'Dispatch',
-    icon: Send,
+    label: 'Raw Data',
+    icon: Database,
     children: [
-      { label: 'Install', to: '/admin/dispatch/install', icon: ClipboardCheck },
-      { label: 'Repair', to: '/admin/dispatch/repair', icon: Wrench },
+      { label: 'Install', to: '/admin/raw-data/install', icon: Hammer },
+      { label: 'Repair', to: '/admin/raw-data/repair', icon: Wrench },
     ],
   },
-  { label: 'Add Repair Ticket', to: '/admin/add-repair-ticket', icon: Wrench },
   {
     label: 'Materials',
     icon: Package,
@@ -49,11 +49,11 @@ const ADMIN_MENU = [
     icon: Users,
     children: [
       { label: 'Add Technician', to: '/admin/technician/add', icon: UserPlus },
-      { label: 'View All Technician', to: '/admin/technician/view-all', icon: Eye },
+      { label: 'View All Technicians', to: '/admin/technician/view-all', icon: Eye },
     ],
   },
-  { label: 'Attendance', to: '/admin/attendance', icon: Calendar },
-  { label: 'Transactions', to: '/admin/transactions', icon: ClipboardList },
+  { label: 'Attendance', to: '/admin/attendance', icon: CalendarCheck },
+  { label: 'Admin User', to: '/admin/users', icon: UserCog },
 ]
 
 const TECH_MENU = [

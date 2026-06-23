@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Search, Eye, Pencil, AlertCircle, CheckCircle2 } from 'lucide-react'
-import Pagination from '../../components/Tables/Pagination'
-import StatusBadge from '../../components/Tables/StatusBadge'
-import ViewTransactionModal from '../../components/Modals/ViewTransactionModal'
-import EditRawDataModal from '../../components/Modals/EditRawDataModal'
-import LoadingData from '../../components/Loading/LoadingData'
-import { useData } from '../../context/useData'
-import { updateRawData } from '../../utils/sheetsApi'
+import Pagination from '../../../components/Tables/Pagination'
+import StatusBadge from '../../../components/Tables/StatusBadge'
+import ViewTransactionModal from '../../../components/Modals/ViewTransactionModal'
+import EditRawDataModal from '../../../components/Modals/EditRawDataModal'
+import LoadingData from '../../../components/Loading/LoadingData'
+import { useData } from '../../../context/useData'
+import { updateRawData } from '../../../utils/sheetsApi'
 
 const STATUS_FILTER_OPTIONS = [
   'All',
@@ -33,7 +33,7 @@ function formatDisplayDate(value) {
   })
 }
 
-export default function RawData() {
+export default function RawDataInstall() {
   const { transactions, loading, error, refresh } = useData()
 
   const [search, setSearch] = useState('')
@@ -74,7 +74,7 @@ export default function RawData() {
 
   return (
     <div className="w-full max-w-full space-y-4 overflow-hidden">
-      <h1 className="text-xl font-bold text-gray-800">Raw Data</h1>
+      <h1 className="text-xl font-bold text-gray-800">Raw Data — Install</h1>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
