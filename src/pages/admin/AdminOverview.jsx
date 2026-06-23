@@ -10,7 +10,21 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts'
-import { Users, UserCog, Package, ClipboardList, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import {
+  Users,
+  UserCog,
+  Package,
+  ClipboardList,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  FileCheck,
+  AlertTriangle,
+  XCircle,
+  Boxes,
+  Archive,
+} from 'lucide-react'
 import StatCard from '../../components/Cards/StatCard'
 import DataTable from '../../components/Tables/DataTable'
 import StatusBadge from '../../components/Tables/StatusBadge'
@@ -27,18 +41,91 @@ function groupCount(items, keyFn) {
   return map
 }
 
+function normalizeStatus(status = '') {
+  return String(status).trim().toUpperCase()
+}
+
+function SummaryCard({ title, value, icon: Icon }) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase text-gray-500">{title}</p>
+          <h3 className="mt-4 text-3xl font-bold text-gray-900">{value}</h3>
+        </div>
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-red-600 to-orange-500 text-white">
+          <Icon className="h-6 w-6" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminOverview() {
   const { technicians, transactions, loading, error } = useData()
   const [materials, setMaterials] = useState([])
+  const [jobOrders, setJobOrders] = useState([])
+  const [repairTickets, setRepairTickets] = useState([])
 
   useEffect(() => {
     apiRequest('getMaterialStocks')
       .then((res) => setMaterials(res.materialStocks || []))
       .catch(() => setMaterials([]))
+    apiRequest('getJobOrders')
+      .then((res) => setJobOrders(res.jobOrders || []))
+      .catch(() => setJobOrders([]))
+    apiRequest('getRepairTickets')
+      .then((res) => setRepairTickets(res.repairTickets || []))
+      .catch(() => setRepairTickets([]))
   }, [])
 
   const completed = transactions.filter((t) => t.status === 'Completed').length
   const pending = transactions.filter((t) => t.status === 'Pending').length
+
+  const prOutput = useMemo(
+    () => ({
+      completed: jobOrders.filter((item) => normalizeStatus(item.status) === 'COMPLETED').length,
+      ongoing: jobOrders.filter((item) =>
+        ['ONGOING', 'IN PROGRESS', 'DISPATCHED'].includes(normalizeStatus(item.status))
+      ).length,
+      forClosing: jobOrders.filter((item) => normalizeStatus(item.status) === 'FOR CLOSING').length,
+      unattended: jobOrders.filter((item) =>
+        ['UNATTENDED', 'UNATTEDED'].includes(normalizeStatus(item.status))
+      ).length,
+      noEndButton: jobOrders.filter(
+        (item) =>
+          normalizeStatus(item.status) === 'NO END BUTTON' ||
+          item.noEndButton === true ||
+          item.endButtonStatus === 'No End Button'
+      ).length,
+    }),
+    [jobOrders]
+  )
+
+  const warOutput = useMemo(
+    () => ({
+      completed: repairTickets.filter((item) => normalizeStatus(item.status) === 'COMPLETED').length,
+      ongoing: repairTickets.filter((item) =>
+        ['ONGOING', 'IN PROGRESS', 'DISPATCHED'].includes(normalizeStatus(item.status))
+      ).length,
+      forClosing: repairTickets.filter((item) => normalizeStatus(item.status) === 'FOR CLOSING').length,
+      unattended: repairTickets.filter((item) =>
+        ['UNATTENDED', 'UNATTEDED'].includes(normalizeStatus(item.status))
+      ).length,
+    }),
+    [repairTickets]
+  )
+
+  const materialsSummary = useMemo(
+    () => ({
+      allMaterials: materials.length,
+      available: materials.filter((item) => ['AVAILABLE', 'ON HAND'].includes(normalizeStatus(item.status)))
+        .length,
+      used: materials.filter((item) => normalizeStatus(item.status) === 'USED').length,
+    }),
+    [materials]
+  )
 
   const transactionsPerDay = useMemo(() => {
     const counts = groupCount(transactions, (t) =>
@@ -102,6 +189,36 @@ export default function AdminOverview() {
         <StatCard label="Total Transactions" value={transactions.length} icon={ClipboardList} />
         <StatCard label="Completed Forms" value={completed} icon={CheckCircle2} />
         <StatCard label="Pending Forms" value={pending} icon={Clock} />
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-700">Total Output (PR)</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <SummaryCard title="Completed" value={prOutput.completed} icon={CheckCircle} />
+          <SummaryCard title="Ongoing" value={prOutput.ongoing} icon={Clock} />
+          <SummaryCard title="For Closing" value={prOutput.forClosing} icon={FileCheck} />
+          <SummaryCard title="Unattended" value={prOutput.unattended} icon={AlertTriangle} />
+          <SummaryCard title="No End Button" value={prOutput.noEndButton} icon={XCircle} />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-700">Total Output (WAR)</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryCard title="Completed" value={warOutput.completed} icon={CheckCircle} />
+          <SummaryCard title="Ongoing" value={warOutput.ongoing} icon={Clock} />
+          <SummaryCard title="For Closing" value={warOutput.forClosing} icon={FileCheck} />
+          <SummaryCard title="Unattended" value={warOutput.unattended} icon={AlertTriangle} />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-700">Materials Summary</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SummaryCard title="All Materials" value={materialsSummary.allMaterials} icon={Package} />
+          <SummaryCard title="Available" value={materialsSummary.available} icon={Boxes} />
+          <SummaryCard title="Used" value={materialsSummary.used} icon={Archive} />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
