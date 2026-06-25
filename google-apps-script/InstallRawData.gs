@@ -1,10 +1,13 @@
-// Install Raw Data module backend. Operates on the existing legacy Sheet1 (SHEET_NAME/
-// HEADERS, defined in Code.gs) rather than a new sheet — Sheet1's header row already
-// matches this exact column layout (it's the original installer report, previously
-// write-only via saveInstallerRecord). Relies on getOrCreateSheet/jsonResponse from
-// Code.gs (same Apps Script project, shared global scope — no import needed).
-//
-// Sheet1 has no id column, so the actual sheet row number (2, 3, 4, ...) is used as the
+// Install Raw Data module backend. Operates on the existing legacy installer report sheet
+// (renamed from "Sheet1" to "Raw Data Install" in the spreadsheet) rather than a new sheet
+// — its header row already matches this exact column layout (previously write-only via
+// saveInstallerRecord in Code.gs). Relies on getOrCreateSheet/jsonResponse from Code.gs
+// (same Apps Script project, shared global scope — no import needed). HEADERS (the header
+// row array) is also defined in Code.gs and reused as-is; only the sheet name is its own
+// constant here so this module isn't implicitly coupled to Code.gs's SHEET_NAME.
+const INSTALL_RAW_DATA_SHEET = 'Raw Data Install'
+
+// This sheet has no id column, so the actual sheet row number (2, 3, 4, ...) is used as the
 // row id everywhere here — simplest way to address rows for editing without changing the
 // existing column layout other flows (saveInstallerRecord) already write into positionally.
 
@@ -82,7 +85,7 @@ function routeInstallRawDataAction(action, data) {
 }
 
 function getInstallRawData() {
-  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
+  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
   const lastRow = sheet.getLastRow()
   if (lastRow < 2) return jsonResponse({ status: 'ok', rows: [] })
 
@@ -114,7 +117,7 @@ function writeInstallRawDataField(sheet, rowIndex, key, value) {
 }
 
 function updateInstallRawDataCell(data) {
-  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
+  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
   if (INSTALL_RAW_DATA_KEYS.indexOf(data.field) === -1) {
     return jsonResponse({ status: 'error', message: 'Unknown field: ' + data.field })
   }
@@ -123,7 +126,7 @@ function updateInstallRawDataCell(data) {
 }
 
 function updateInstallRawDataRow(data) {
-  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
+  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
   const rowIndex = Number(data.id)
   const rowData = data.row || {}
 
@@ -138,7 +141,7 @@ function updateInstallRawDataRow(data) {
 }
 
 function bulkUpdateInstallRawData(data) {
-  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
+  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
   const rows = data.rows || []
 
   rows.forEach((rowData) => {
@@ -156,7 +159,7 @@ function bulkUpdateInstallRawData(data) {
 }
 
 function addInstallRawDataRows(data) {
-  const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
+  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
   const rows = data.rows || []
   const ids = []
 
