@@ -52,7 +52,7 @@ function routeAttendanceAction(action, data) {
     case 'getTechnicianAttendance':
       return getTechnicianAttendance(data)
     default:
-      return jsonResponse({ status: 'error', message: 'Unknown action: ' + action })
+      return routeInstallRawDataAction(action, data)
   }
 }
 
