@@ -51,7 +51,7 @@ const DEFAULT_ROW_COUNT = 3
 
 function createEmptyInstallRawDataRow() {
   return {
-    id: '',
+    _rowNumber: '',
     uploadedGeotagging: '',
     tms: '',
     ofsc: '',
@@ -137,15 +137,15 @@ export default function RawDataInstall() {
     if (!row) return
     setError('')
     try {
-      if (row.id) {
-        await apiRequest('updateInstallRawDataRow', { id: row.id, row })
+      if (row._rowNumber) {
+        await apiRequest('updateInstallRawDataRow', { rowNumber: row._rowNumber, row })
       } else {
         const res = await apiRequest('addInstallRawDataRows', { rows: [row] })
-        const newId = res.ids?.[0]
-        if (newId) {
+        const newRowNumber = res.rowNumbers?.[0]
+        if (newRowNumber) {
           setRows((prev) => {
             const updated = [...prev]
-            updated[rowIndex] = { ...updated[rowIndex], id: newId }
+            updated[rowIndex] = { ...updated[rowIndex], _rowNumber: newRowNumber }
             return updated
           })
         }
@@ -158,8 +158,8 @@ export default function RawDataInstall() {
 
   const persistPastedRows = async (allRows, startIdx, endIdx) => {
     const affected = allRows.slice(startIdx, endIdx + 1)
-    const existing = affected.filter((r) => r.id)
-    const fresh = affected.filter((r) => !r.id)
+    const existing = affected.filter((r) => r._rowNumber)
+    const fresh = affected.filter((r) => !r._rowNumber)
 
     setError('')
     try {
@@ -168,13 +168,13 @@ export default function RawDataInstall() {
       }
       if (fresh.length > 0) {
         const res = await apiRequest('addInstallRawDataRows', { rows: fresh })
-        if (res.ids) {
+        if (res.rowNumbers) {
           setRows((prev) => {
             const updated = [...prev]
             let freshIdx = 0
             for (let i = startIdx; i <= endIdx; i++) {
-              if (!updated[i].id) {
-                updated[i] = { ...updated[i], id: res.ids[freshIdx] }
+              if (!updated[i]._rowNumber) {
+                updated[i] = { ...updated[i], _rowNumber: res.rowNumbers[freshIdx] }
                 freshIdx++
               }
             }
@@ -294,7 +294,7 @@ export default function RawDataInstall() {
                   {filteredIndices.map((rowIndex) => {
                     const row = rows[rowIndex]
                     return (
-                      <tr key={row.id || `new-${rowIndex}`} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={row._rowNumber || `new-${rowIndex}`} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="px-3 py-1 text-center text-xs text-gray-400">{rowIndex + 1}</td>
                         {installRawDataColumns.map((col) => (
                           <td key={col.key} className="border-r border-gray-50 p-0">

@@ -2,11 +2,11 @@ const SHEET_NAME = 'Raw Data Install'
 const TECHNICIAN_SHEET_NAME = 'Technician'
 const TRANSACTIONS_SHEET_NAME = 'Transactions'
 
-// Matches the existing header row in the spreadsheet exactly (column A through AM).
-// This is the legacy installer report layout — write-only from this app, untouched on read.
+// Matches the existing header row in the spreadsheet exactly, Column A onward — no leading
+// placeholder columns. This is the legacy installer report layout (also read/edited via
+// InstallRawData.gs's INSTALL_RAW_DATA_COLUMNS, which must stay positionally identical to
+// this array).
 const HEADERS = [
-  '3',
-  '',
   'UPLOADED GEOTAGGING',
   'TMS',
   'OFSC',
@@ -143,8 +143,6 @@ function saveInstallerRecord(data) {
   const sheet = getOrCreateSheet(SHEET_NAME, HEADERS)
 
   sheet.appendRow([
-    '', // 3 (unused index column)
-    '', // (blank column)
     buildGeotagSummary(data), // UPLOADED GEOTAGGING
     '', // TMS
     '', // OFSC

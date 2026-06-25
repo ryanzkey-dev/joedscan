@@ -1,59 +1,56 @@
-// Install Raw Data module backend. Operates on the existing legacy installer report sheet
-// (renamed from "Sheet1" to "Raw Data Install" in the spreadsheet) rather than a new sheet
-// — its header row already matches this exact column layout (previously write-only via
-// saveInstallerRecord in Code.gs). Relies on getOrCreateSheet/jsonResponse from Code.gs
-// (same Apps Script project, shared global scope — no import needed). HEADERS (the header
-// row array) is also defined in Code.gs and reused as-is; only the sheet name is its own
-// constant here so this module isn't implicitly coupled to Code.gs's SHEET_NAME.
+// Install Raw Data module backend. Operates on the existing "Raw Data Install" sheet
+// (the legacy installer report, renamed from "Sheet1") rather than a new sheet. Relies on
+// getOrCreateSheet/jsonResponse from Code.gs (same Apps Script project, shared global
+// scope — no import needed).
+//
+// This sheet has no id column and Column A starts directly at UPLOADED GEOTAGGING (no
+// leading placeholder columns), so the actual Google Sheets row number (2, 3, 4, ...) is
+// used to address rows for editing, returned to the frontend as _rowNumber — never written
+// as a header, never displayed as a table column.
 const INSTALL_RAW_DATA_SHEET = 'Raw Data Install'
 
-// This sheet has no id column, so the actual sheet row number (2, 3, 4, ...) is used as the
-// row id everywhere here — simplest way to address rows for editing without changing the
-// existing column layout other flows (saveInstallerRecord) already write into positionally.
-
-// Mirrors HEADERS' column order exactly. The first two columns ('3' and a blank header)
-// are legacy/unused, kept as '_' placeholders so positions still line up.
-const INSTALL_RAW_DATA_KEYS = [
-  '_col1',
-  '_col2',
-  'uploadedGeotagging',
-  'tms',
-  'ofsc',
-  'remarks2',
-  'remarks3',
-  'month',
-  'date',
-  'techNames',
-  'soType',
-  'projectId',
-  'soVoice',
-  'soData',
-  'soIptv',
-  'subscriber',
-  'address',
-  'cbr',
-  'tel',
-  'exchanged',
-  'cpeStatus',
-  'focPrefabSerial',
-  'modem',
-  'telset',
-  'iptvCcaNo',
-  'cafac',
-  'mhb',
-  'ioo',
-  'patch',
-  'ojb',
-  'cableTie',
-  'fclip',
-  'fclamp',
-  'fic',
-  'span',
-  'meterStart',
-  'meterEnd',
-  'meterConsume',
-  'focType',
+const INSTALL_RAW_DATA_COLUMNS = [
+  { key: 'uploadedGeotagging', header: 'UPLOADED GEOTAGGING' },
+  { key: 'tms', header: 'TMS' },
+  { key: 'ofsc', header: 'OFSC' },
+  { key: 'remarks2', header: 'REMARKS 2' },
+  { key: 'remarks3', header: 'REMARKS 3' },
+  { key: 'month', header: 'MONTH' },
+  { key: 'date', header: 'DATE' },
+  { key: 'techNames', header: 'TECH NAMES' },
+  { key: 'soType', header: 'SO TYPE' },
+  { key: 'projectId', header: 'PROJECT ID' },
+  { key: 'soVoice', header: 'SO VOICE' },
+  { key: 'soData', header: 'SO DATA' },
+  { key: 'soIptv', header: 'SO IPTV' },
+  { key: 'subscriber', header: 'SUBSCRIBER' },
+  { key: 'address', header: 'ADDRESS' },
+  { key: 'cbr', header: 'CBR' },
+  { key: 'tel', header: 'TEL' },
+  { key: 'exchanged', header: 'EXCHANGED' },
+  { key: 'cpeStatus', header: 'CPE STATUS' },
+  { key: 'focPrefabSerial', header: 'FOC PREFAB SERIAL' },
+  { key: 'modem', header: 'MODEM' },
+  { key: 'telset', header: 'TELSET' },
+  { key: 'iptvCcaNo', header: 'IPTV CCA NO' },
+  { key: 'cafac', header: 'CAFAC' },
+  { key: 'mhb', header: 'MHB' },
+  { key: 'ioo', header: 'IOO' },
+  { key: 'patch', header: 'PATCH' },
+  { key: 'ojb', header: 'OJB' },
+  { key: 'cableTie', header: 'CABLE TIE' },
+  { key: 'fclip', header: 'FCLIP' },
+  { key: 'fclamp', header: 'FCLAMP' },
+  { key: 'fic', header: 'FIC' },
+  { key: 'span', header: 'SPAN' },
+  { key: 'meterStart', header: 'METER START' },
+  { key: 'meterEnd', header: 'METER END' },
+  { key: 'meterConsume', header: 'METER CONSUME' },
+  { key: 'focType', header: 'FOC TYPE' },
 ]
+
+const INSTALL_RAW_DATA_HEADERS = INSTALL_RAW_DATA_COLUMNS.map((col) => col.header)
+const INSTALL_RAW_DATA_KEYS = INSTALL_RAW_DATA_COLUMNS.map((col) => col.key)
 
 // Sheets auto-converts date-looking text into real Date cells. Force these two columns
 // back to plain text whenever written, and format any Date objects encountered on read
@@ -65,6 +62,10 @@ function formatInstallRawDataCellForRead(value) {
     return Utilities.formatDate(value, Session.getScriptTimeZone(), 'MMM dd, yyyy')
   }
   return String(value)
+}
+
+function getInstallRawDataSheet() {
+  return getOrCreateSheet(INSTALL_RAW_DATA_SHEET, INSTALL_RAW_DATA_HEADERS)
 }
 
 function routeInstallRawDataAction(action, data) {
@@ -85,7 +86,7 @@ function routeInstallRawDataAction(action, data) {
 }
 
 function getInstallRawData() {
-  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
+  const sheet = getInstallRawDataSheet()
   const lastRow = sheet.getLastRow()
   if (lastRow < 2) return jsonResponse({ status: 'ok', rows: [] })
 
@@ -94,22 +95,21 @@ function getInstallRawData() {
 
   const rows = values
     .map((rowValues, i) => {
-      const row = { id: i + 2 }
+      const row = { _rowNumber: i + 2 }
       INSTALL_RAW_DATA_KEYS.forEach((key, colIndex) => {
-        if (key.indexOf('_') === 0) return
         row[key] = formatInstallRawDataCellForRead(rowValues[colIndex])
       })
       return row
     })
-    .filter((row) => Object.keys(row).some((key) => key !== 'id' && row[key] !== ''))
+    .filter((row) => Object.keys(row).some((key) => key !== '_rowNumber' && row[key] !== ''))
 
   return jsonResponse({ status: 'ok', rows })
 }
 
-function writeInstallRawDataField(sheet, rowIndex, key, value) {
+function writeInstallRawDataField(sheet, rowNumber, key, value) {
   const colIndex = INSTALL_RAW_DATA_KEYS.indexOf(key)
   if (colIndex === -1) return
-  const range = sheet.getRange(rowIndex, colIndex + 1)
+  const range = sheet.getRange(rowNumber, colIndex + 1)
   if (INSTALL_RAW_DATA_TEXT_FORCED_KEYS.indexOf(key) !== -1) {
     range.setNumberFormat('@')
   }
@@ -117,23 +117,22 @@ function writeInstallRawDataField(sheet, rowIndex, key, value) {
 }
 
 function updateInstallRawDataCell(data) {
-  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
+  const sheet = getInstallRawDataSheet()
   if (INSTALL_RAW_DATA_KEYS.indexOf(data.field) === -1) {
     return jsonResponse({ status: 'error', message: 'Unknown field: ' + data.field })
   }
-  writeInstallRawDataField(sheet, Number(data.id), data.field, data.value)
+  writeInstallRawDataField(sheet, Number(data.rowNumber), data.field, data.value)
   return jsonResponse({ status: 'success' })
 }
 
 function updateInstallRawDataRow(data) {
-  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
-  const rowIndex = Number(data.id)
+  const sheet = getInstallRawDataSheet()
+  const rowNumber = Number(data.rowNumber)
   const rowData = data.row || {}
 
   INSTALL_RAW_DATA_KEYS.forEach((key) => {
-    if (key.indexOf('_') === 0) return
     if (Object.prototype.hasOwnProperty.call(rowData, key)) {
-      writeInstallRawDataField(sheet, rowIndex, key, rowData[key])
+      writeInstallRawDataField(sheet, rowNumber, key, rowData[key])
     }
   })
 
@@ -141,16 +140,15 @@ function updateInstallRawDataRow(data) {
 }
 
 function bulkUpdateInstallRawData(data) {
-  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
+  const sheet = getInstallRawDataSheet()
   const rows = data.rows || []
 
   rows.forEach((rowData) => {
-    const rowIndex = Number(rowData.id)
-    if (!rowIndex) return
+    const rowNumber = Number(rowData._rowNumber)
+    if (!rowNumber) return
     INSTALL_RAW_DATA_KEYS.forEach((key) => {
-      if (key.indexOf('_') === 0) return
       if (Object.prototype.hasOwnProperty.call(rowData, key)) {
-        writeInstallRawDataField(sheet, rowIndex, key, rowData[key])
+        writeInstallRawDataField(sheet, rowNumber, key, rowData[key])
       }
     })
   })
@@ -159,26 +157,24 @@ function bulkUpdateInstallRawData(data) {
 }
 
 function addInstallRawDataRows(data) {
-  const sheet = getOrCreateSheet(INSTALL_RAW_DATA_SHEET, HEADERS)
+  const sheet = getInstallRawDataSheet()
   const rows = data.rows || []
-  const ids = []
+  const rowNumbers = []
 
   rows.forEach((rowData) => {
-    const rowValues = INSTALL_RAW_DATA_KEYS.map((key) =>
-      key.indexOf('_') === 0 ? '' : rowData[key] || ''
-    )
+    const rowValues = INSTALL_RAW_DATA_KEYS.map((key) => rowData[key] || '')
     sheet.appendRow(rowValues)
-    const newRowIndex = sheet.getLastRow()
+    const newRowNumber = sheet.getLastRow()
 
     INSTALL_RAW_DATA_TEXT_FORCED_KEYS.forEach((key) => {
       if (rowData[key]) {
         const colIndex = INSTALL_RAW_DATA_KEYS.indexOf(key)
-        sheet.getRange(newRowIndex, colIndex + 1).setNumberFormat('@').setValue(rowData[key])
+        sheet.getRange(newRowNumber, colIndex + 1).setNumberFormat('@').setValue(rowData[key])
       }
     })
 
-    ids.push(newRowIndex)
+    rowNumbers.push(newRowNumber)
   })
 
-  return jsonResponse({ status: 'success', ids: ids })
+  return jsonResponse({ status: 'success', rowNumbers: rowNumbers })
 }
