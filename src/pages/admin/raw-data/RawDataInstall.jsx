@@ -5,6 +5,54 @@ import { apiRequest } from '../../../utils/sheetsApi'
 
 const COLUMN_WIDTH_STORAGE_KEY = 'xq_raw_data_install_column_widths'
 
+const tmsStatusOptions = [
+  'CLOSED',
+  'RPR',
+  'UNATTENDED',
+  'NOT ON TMS',
+  'BK INSTALL',
+  'FOR CLOSING TMS',
+  'CLOSED IPTV TMS',
+  'PENDING IPTV',
+  'AREA NOT MATCH',
+  'FOR RE-OPEN SO',
+  'FOR CHECKING CPE ON TMS',
+  'WRONG AERIAL TYPE',
+  'PENDING TELSET',
+  'PENDING BEYOND FIBER ONU',
+  'FOR CHANGE MODEM',
+  'FOR CLOSING RELOC',
+  'DONE SURVEY',
+  'IPTV DUPLICATE',
+  'FOR MANUAL LUNOD',
+]
+
+function getTmsStatusColor(status = '') {
+  const value = String(status).trim().toUpperCase()
+  const colors = {
+    'CLOSED': 'bg-red-100 text-red-700',
+    'RPR': 'bg-red-700 text-white',
+    'UNATTENDED': 'bg-gray-700 text-white',
+    'NOT ON TMS': 'bg-teal-300 text-gray-900',
+    'BK INSTALL': 'bg-blue-600 text-white',
+    'FOR CLOSING TMS': 'bg-purple-700 text-white',
+    'CLOSED IPTV TMS': 'bg-pink-500 text-white',
+    'PENDING IPTV': 'bg-yellow-300 text-gray-900',
+    'AREA NOT MATCH': 'bg-blue-700 text-white',
+    'FOR RE-OPEN SO': 'bg-blue-700 text-white',
+    'FOR CHECKING CPE ON TMS': 'bg-purple-200 text-purple-800',
+    'WRONG AERIAL TYPE': 'bg-fuchsia-700 text-black',
+    'PENDING TELSET': 'bg-blue-500 text-black',
+    'PENDING BEYOND FIBER ONU': 'bg-yellow-900 text-yellow-100',
+    'FOR CHANGE MODEM': 'bg-cyan-900 text-cyan-100',
+    'FOR CLOSING RELOC': 'bg-blue-700 text-white',
+    'DONE SURVEY': 'bg-green-700 text-white',
+    'IPTV DUPLICATE': 'bg-yellow-200 text-yellow-900',
+    'FOR MANUAL LUNOD': 'bg-sky-200 text-blue-800',
+  }
+  return colors[value] || 'bg-white text-gray-700'
+}
+
 const uploadedGeotaggingOptions = [
   'DONE UPLOAD',
   'PENDING',
@@ -513,6 +561,23 @@ export default function RawDataInstall() {
                                 >
                                   <option value="">SELECT STATUS</option>
                                   {uploadedGeotaggingOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : col.key === 'tms' ? (
+                                <select
+                                  value={row.tms || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value
+                                    updateCell(rowIndex, 'tms', val)
+                                    if (row._rowNumber) saveCell(row._rowNumber, 'tms', val)
+                                  }}
+                                  className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getTmsStatusColor(row.tms)}`}
+                                >
+                                  <option value="">SELECT TMS STATUS</option>
+                                  {tmsStatusOptions.map((option) => (
                                     <option key={option} value={option}>
                                       {option}
                                     </option>

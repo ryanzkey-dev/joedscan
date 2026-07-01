@@ -179,6 +179,40 @@ function addInstallRawDataRowAtTop(data) {
   return jsonResponse({ status: 'success', rowNumber: 2 })
 }
 
+// Optional: run once from the Apps Script editor to add dropdown validation for Column B
+// (TMS) in Google Sheets. Not called automatically.
+function applyTmsStatusValidation() {
+  const sheet = getInstallRawDataSheet()
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(
+      [
+        'CLOSED',
+        'RPR',
+        'UNATTENDED',
+        'NOT ON TMS',
+        'BK INSTALL',
+        'FOR CLOSING TMS',
+        'CLOSED IPTV TMS',
+        'PENDING IPTV',
+        'AREA NOT MATCH',
+        'FOR RE-OPEN SO',
+        'FOR CHECKING CPE ON TMS',
+        'WRONG AERIAL TYPE',
+        'PENDING TELSET',
+        'PENDING BEYOND FIBER ONU',
+        'FOR CHANGE MODEM',
+        'FOR CLOSING RELOC',
+        'DONE SURVEY',
+        'IPTV DUPLICATE',
+        'FOR MANUAL LUNOD',
+      ],
+      true
+    )
+    .setAllowInvalid(false)
+    .build()
+  sheet.getRange('B2:B').setDataValidation(rule)
+}
+
 // Optional: run once from the Apps Script editor to add dropdown validation for Column A
 // (UPLOADED GEOTAGGING) in Google Sheets. Not called automatically.
 function applyUploadedGeotaggingValidation() {
