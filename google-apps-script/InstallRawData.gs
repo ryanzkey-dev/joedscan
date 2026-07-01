@@ -179,6 +179,40 @@ function addInstallRawDataRowAtTop(data) {
   return jsonResponse({ status: 'success', rowNumber: 2 })
 }
 
+// Optional: run once from the Apps Script editor to add dropdown validation for Column D
+// (REMARKS 2) in Google Sheets. Not called automatically.
+function applyRemarks2StatusValidation() {
+  const sheet = getInstallRawDataSheet()
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(
+      [
+        'ACTIVATED', 'NOT YET ACTIVATED', 'RPR/CALL THRU', 'UNATTENDED', 'ALREADY INSTALL',
+        'ASSIGN ANOTHER BP', 'COMPLETED', 'ONGOING', 'FOR ACTIVATION', 'SURVEY/VISITED',
+        'NO FIBER FACILITIES', 'ENTERPRISE', 'INSTALLABLE', 'SUBS CANCEL REQUEST', 'RESCHEDULE',
+        'CBR PROBLEM', 'FOR REVISIT', 'CPP/NPA', 'FULL NAP', 'NO FTTX', 'NO END BUTTON', 'MCT',
+        'DEAP NAP', 'WRONG ADDRESS', 'PENDING IPTV', 'HIGH READING', 'NO POLE TO ATTACH',
+        'UNDECIDED', 'FOR NCU', 'NAP NOT YET BROACASTED', 'CRITICAL AREA', 'DEAD NAP',
+        'DOUBLE APPLICATION', 'OVERSPANNING', 'HOUSE CLOSED', 'HIGH LOS', 'RPR/VISITED SURVEY',
+        'CROSSING PRIVATE PROPERTY', 'NOT INTERESTED', 'AWAITING PROJECT COMP',
+        'NOT YET BROADCASTED', 'CHANGE PLAN', 'FOR CX HANDLING', 'RELOCATION', 'FOR OPSIM',
+        'NO PLDT FACILITIES', 'NEED PERMIT', 'BAD WEATHER', 'CANCEL AND RECREATE',
+        'VEHICLE PROBLEM', 'CONDUIT PROBLEM', 'WAITING WORKING PERMIT', 'DAMAGED CAR',
+        'FOR CONT.TAUD UGMA', 'NO FOC', 'NO MATERIALS', 'DO NOT TRIGGER', 'ACTIVATION FAILED',
+        'FOR RECONFIG', 'OLT DOWN', 'LATLONG ISSUE', 'DONE INSTALL', 'HOUSE UNDER CONS',
+        'CANT VIEW IN ORACLE', 'SUBS N/A', 'RPR-AFD', 'FOR REIMP', 'CANCELLED SO',
+        'FOR CREATION', 'NOT YET IN SERVICE', 'P2P', 'UNO OFFLINE', 'TECH VEHICLE BREAKDOWN',
+        'Activation Failure ❌', 'Circuit Redesign Requested ⏳', 'VIEW IN ORACLE',
+        'KENAN COMPLETED', 'WAITING BEYOND FIBER ONU', 'NO ELECTRICITY', 'FOR CANCEL RECREATE',
+        'WAITING MATERIALS', 'NO MODEM', 'Activation Requested ⏳',
+        'Circuit Redesign Requested Error', 'THUMBS DOWN', 'ONU OFFLINE',
+      ],
+      true
+    )
+    .setAllowInvalid(false)
+    .build()
+  sheet.getRange('D2:D').setDataValidation(rule)
+}
+
 // Optional: run once from the Apps Script editor to add dropdown validation for Column C
 // (OFSC) in Google Sheets. Not called automatically.
 function applyOfscStatusValidation() {
