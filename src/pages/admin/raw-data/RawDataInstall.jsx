@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, AlertCircle, CheckCircle2, RotateCcw } from 'lucide-react'
+import { Search, AlertCircle } from 'lucide-react'
 import LoadingData from '../../../components/Loading/LoadingData'
 import { apiRequest } from '../../../utils/sheetsApi'
 
@@ -545,7 +545,8 @@ export default function RawDataInstall() {
 
   const saveRow = async (rowIndex) => {
     const row = rows[rowIndex]
-    if (!row) return
+    // Skip rows that are still pending insertion (temp rows have no _rowNumber yet)
+    if (!row || row._tempId) return
     setError('')
     try {
       if (row._rowNumber) {
@@ -579,10 +580,18 @@ export default function RawDataInstall() {
   }
 
   const handleAddRowAtTop = async () => {
+    if (addingRow) return
+
+    const tempId = `temp-${Date.now()}`
+    const blankRow = { ...createEmptyInstallRawDataRow(), _tempId: tempId }
+
+    // Show blank row at position 0 immediately so admin can see and click into it
+    setRows((prev) => [blankRow, ...prev])
     setAddingRow(true)
     setError('')
+
     try {
-      await apiRequest('addInstallRawDataRowAtTop', { row: createEmptyInstallRawDataRow() })
+      await apiRequest('addInstallRawDataRowAtTop', { row: blankRow })
       // Reload so every _rowNumber reflects the shift caused by insertRowAfter(1)
       const res = await apiRequest('getInstallRawData')
       const fetched = res.rows || []
@@ -593,6 +602,8 @@ export default function RawDataInstall() {
       )
       flashSuccess()
     } catch (err) {
+      // Remove temp row if backend failed
+      setRows((prev) => prev.filter((r) => r._tempId !== tempId))
       setError(err.message)
     } finally {
       setAddingRow(false)
@@ -617,11 +628,6 @@ export default function RawDataInstall() {
 
     document.addEventListener('pointermove', onMove)
     document.addEventListener('pointerup', onUp)
-  }
-
-  const resetColumnWidths = () => {
-    setColumnWidths(defaultColumnWidths)
-    localStorage.removeItem(COLUMN_WIDTH_STORAGE_KEY)
   }
 
   const persistPastedRows = async (allRows, startIdx, endIdx) => {
@@ -702,22 +708,24 @@ export default function RawDataInstall() {
   }, [rows, search])
 
   return (
-    <div className="w-full max-w-full space-y-6 overflow-hidden">
-      <h1 className="text-xl font-bold text-gray-800">Raw Data — Install</h1>
-
-      {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          <AlertCircle size={18} />
-          {error}
+    <div className="w-full max-w-full space-y-4 overflow-hidden">
+      {/* Title row: page title left, status pills right — no layout shift */}
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl font-bold text-gray-800">Raw Data — Install</h1>
+        <div className="flex min-h-[28px] items-center gap-2">
+          {error && (
+            <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+              <AlertCircle size={12} />
+              {error}
+            </span>
+          )}
+          {success && (
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+              {success}
+            </span>
+          )}
         </div>
-      )}
-
-      {success && (
-        <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
-          <CheckCircle2 size={18} />
-          {success}
-        </div>
-      )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
@@ -745,15 +753,6 @@ export default function RawDataInstall() {
           ) : (
             '+ ADD ROW'
           )}
-        </button>
-
-        <button
-          type="button"
-          onClick={resetColumnWidths}
-          className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
-        >
-          <RotateCcw size={14} />
-          Reset Columns
         </button>
       </div>
 
@@ -799,7 +798,7 @@ export default function RawDataInstall() {
                     const row = rows[rowIndex]
                     return (
                       <tr
-                        key={row._rowNumber || `new-${rowIndex}`}
+                        key={row._rowNumber || row._tempId || `new-${rowIndex}`}
                         className="hover:bg-orange-50/40"
                       >
                         <td
