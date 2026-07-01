@@ -80,6 +80,8 @@ function routeInstallRawDataAction(action, data) {
       return bulkUpdateInstallRawData(data)
     case 'addInstallRawDataRows':
       return addInstallRawDataRows(data)
+    case 'addInstallRawDataRowAtTop':
+      return addInstallRawDataRowAtTop(data)
     default:
       return jsonResponse({ status: 'error', message: 'Unknown action: ' + action })
   }
@@ -154,6 +156,52 @@ function bulkUpdateInstallRawData(data) {
   })
 
   return jsonResponse({ status: 'success', updatedCount: rows.length })
+}
+
+// Inserts a new blank row directly after the header (row 2), shifting all existing
+// data rows down by one. Returns the new row's sheet row number (always 2).
+function addInstallRawDataRowAtTop(data) {
+  const sheet = getInstallRawDataSheet()
+  const rowData = data.row || {}
+
+  sheet.insertRowAfter(1)
+
+  const values = INSTALL_RAW_DATA_KEYS.map((key) => rowData[key] || '')
+  sheet.getRange(2, 1, 1, values.length).setValues([values])
+
+  INSTALL_RAW_DATA_TEXT_FORCED_KEYS.forEach((key) => {
+    if (rowData[key]) {
+      const colIndex = INSTALL_RAW_DATA_KEYS.indexOf(key)
+      sheet.getRange(2, colIndex + 1).setNumberFormat('@').setValue(rowData[key])
+    }
+  })
+
+  return jsonResponse({ status: 'success', rowNumber: 2 })
+}
+
+// Optional: run once from the Apps Script editor to add dropdown validation for Column A
+// (UPLOADED GEOTAGGING) in Google Sheets. Not called automatically.
+function applyUploadedGeotaggingValidation() {
+  const sheet = getInstallRawDataSheet()
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(
+      [
+        'DONE UPLOAD',
+        'PENDING',
+        'REUSE',
+        'VOICE & DATA ONLY',
+        'MODIFY',
+        'DATA ONLY',
+        'DONE EMAIL',
+        'NO IPTV S.O',
+        'DONE UPLOAD GEOTAGGING',
+        'NOT UPLOAD GEOTAGGING',
+      ],
+      true
+    )
+    .setAllowInvalid(false)
+    .build()
+  sheet.getRange('A2:A').setDataValidation(rule)
 }
 
 function addInstallRawDataRows(data) {
