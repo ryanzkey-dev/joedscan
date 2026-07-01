@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, AlertCircle, CheckCircle2, Plus } from 'lucide-react'
+import { Search, AlertCircle, CheckCircle2, RotateCcw } from 'lucide-react'
 import LoadingData from '../../../components/Loading/LoadingData'
 import { apiRequest } from '../../../utils/sheetsApi'
+
+const COLUMN_WIDTH_STORAGE_KEY = 'xq_raw_data_install_column_widths'
 
 const uploadedGeotaggingOptions = [
   'DONE UPLOAD',
@@ -19,18 +21,18 @@ const uploadedGeotaggingOptions = [
 function getUploadedGeotaggingColor(status = '') {
   const value = String(status).trim().toUpperCase()
   const colors = {
-    'DONE UPLOAD': 'bg-green-100 text-green-700 border-green-300',
-    'PENDING': 'bg-yellow-100 text-yellow-700 border-yellow-300',
-    'REUSE': 'bg-blue-100 text-blue-700 border-blue-300',
-    'VOICE & DATA ONLY': 'bg-purple-100 text-purple-700 border-purple-300',
-    'MODIFY': 'bg-orange-100 text-orange-700 border-orange-300',
-    'DATA ONLY': 'bg-cyan-100 text-cyan-700 border-cyan-300',
-    'DONE EMAIL': 'bg-emerald-100 text-emerald-700 border-emerald-300',
-    'NO IPTV S.O': 'bg-gray-100 text-gray-700 border-gray-300',
-    'DONE UPLOAD GEOTAGGING': 'bg-teal-100 text-teal-700 border-teal-300',
-    'NOT UPLOAD GEOTAGGING': 'bg-red-100 text-red-700 border-red-300',
+    'DONE UPLOAD': 'bg-green-100 text-green-700',
+    'PENDING': 'bg-yellow-100 text-yellow-700',
+    'REUSE': 'bg-blue-100 text-blue-700',
+    'VOICE & DATA ONLY': 'bg-purple-100 text-purple-700',
+    'MODIFY': 'bg-orange-100 text-orange-700',
+    'DATA ONLY': 'bg-cyan-100 text-cyan-700',
+    'DONE EMAIL': 'bg-emerald-100 text-emerald-700',
+    'NO IPTV S.O': 'bg-gray-100 text-gray-700',
+    'DONE UPLOAD GEOTAGGING': 'bg-teal-100 text-teal-700',
+    'NOT UPLOAD GEOTAGGING': 'bg-red-100 text-red-700',
   }
-  return colors[value] || 'bg-white text-gray-700 border-gray-300'
+  return colors[value] || 'bg-white text-gray-700'
 }
 
 const installRawDataColumns = [
@@ -75,7 +77,47 @@ const installRawDataColumns = [
 
 const columnKeys = installRawDataColumns.map((col) => col.key)
 
-const wideColumns = ['subscriber', 'address', 'remarks2', 'remarks3', 'uploadedGeotagging']
+const defaultColumnWidths = {
+  uploadedGeotagging: 240,
+  tms: 130,
+  ofsc: 130,
+  remarks2: 220,
+  remarks3: 220,
+  month: 120,
+  date: 150,
+  techNames: 180,
+  soType: 140,
+  projectId: 160,
+  soVoice: 130,
+  soData: 130,
+  soIptv: 130,
+  subscriber: 240,
+  address: 300,
+  cbr: 130,
+  tel: 130,
+  exchanged: 150,
+  cpeStatus: 160,
+  focPrefabSerial: 220,
+  modem: 170,
+  telset: 160,
+  iptvCcaNo: 180,
+  cafac: 130,
+  mhb: 130,
+  ioo: 130,
+  patch: 130,
+  ojb: 130,
+  cableTie: 150,
+  fclip: 130,
+  fclamp: 140,
+  fic: 130,
+  span: 130,
+  meterStart: 160,
+  meterEnd: 160,
+  meterConsume: 180,
+  focType: 150,
+}
+
+const ROW_NUM_COL_WIDTH = 46
 
 const DEFAULT_ROW_COUNT = 3
 
@@ -125,9 +167,34 @@ function createEmptyInstallRawDataRow() {
 export default function RawDataInstall() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [addingRow, setAddingRow] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [search, setSearch] = useState('')
+
+  const [columnWidths, setColumnWidths] = useState(() => {
+    try {
+      const saved = localStorage.getItem(COLUMN_WIDTH_STORAGE_KEY)
+      return saved ? { ...defaultColumnWidths, ...JSON.parse(saved) } : defaultColumnWidths
+    } catch {
+      return defaultColumnWidths
+    }
+  })
+
+  const totalTableWidth = useMemo(
+    () =>
+      installRawDataColumns.reduce((sum, col) => sum + (columnWidths[col.key] || 140), 0) +
+      ROW_NUM_COL_WIDTH,
+    [columnWidths]
+  )
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem(COLUMN_WIDTH_STORAGE_KEY, JSON.stringify(columnWidths))
+  }, [columnWidths])
 
   const load = async () => {
     setLoading(true)
@@ -135,17 +202,17 @@ export default function RawDataInstall() {
     try {
       const res = await apiRequest('getInstallRawData')
       const fetched = res.rows || []
-      setRows(fetched.length > 0 ? fetched : Array.from({ length: DEFAULT_ROW_COUNT }, createEmptyInstallRawDataRow))
+      setRows(
+        fetched.length > 0
+          ? fetched
+          : Array.from({ length: DEFAULT_ROW_COUNT }, createEmptyInstallRawDataRow)
+      )
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    load()
-  }, [])
 
   const flashSuccess = () => {
     setSuccess('Raw data updated successfully.')
@@ -195,18 +262,50 @@ export default function RawDataInstall() {
     }
   }
 
-  const handleAddRow = async () => {
+  const handleAddRowAtTop = async () => {
+    setAddingRow(true)
     setError('')
     try {
       await apiRequest('addInstallRawDataRowAtTop', { row: createEmptyInstallRawDataRow() })
-      flashSuccess()
-      // Reload so all _rowNumber values reflect the shift caused by the insert
+      // Reload so every _rowNumber reflects the shift caused by insertRowAfter(1)
       const res = await apiRequest('getInstallRawData')
       const fetched = res.rows || []
-      setRows(fetched.length > 0 ? fetched : Array.from({ length: DEFAULT_ROW_COUNT }, createEmptyInstallRawDataRow))
+      setRows(
+        fetched.length > 0
+          ? fetched
+          : Array.from({ length: DEFAULT_ROW_COUNT }, createEmptyInstallRawDataRow)
+      )
+      flashSuccess()
     } catch (err) {
       setError(err.message)
+    } finally {
+      setAddingRow(false)
     }
+  }
+
+  const handleColumnResizeStart = (e, columnKey) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const startX = e.clientX
+    const startWidth = columnWidths[columnKey] || 140
+
+    function onMove(moveEvent) {
+      const newWidth = Math.max(90, startWidth + (moveEvent.clientX - startX))
+      setColumnWidths((prev) => ({ ...prev, [columnKey]: newWidth }))
+    }
+
+    function onUp() {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+    }
+
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+  }
+
+  const resetColumnWidths = () => {
+    setColumnWidths(defaultColumnWidths)
+    localStorage.removeItem(COLUMN_WIDTH_STORAGE_KEY)
   }
 
   const persistPastedRows = async (allRows, startIdx, endIdx) => {
@@ -263,7 +362,10 @@ export default function RawDataInstall() {
       rowData.forEach((cellValue, colOffset) => {
         const targetColumnKey = columnKeys[startColumnIndex + colOffset]
         if (targetColumnKey) {
-          updatedRows[targetRowIndex] = { ...updatedRows[targetRowIndex], [targetColumnKey]: cellValue.trim() }
+          updatedRows[targetRowIndex] = {
+            ...updatedRows[targetRowIndex],
+            [targetColumnKey]: cellValue.trim(),
+          }
         }
       })
     })
@@ -277,7 +379,9 @@ export default function RawDataInstall() {
     if (!term) return rows.map((_, idx) => idx)
     return rows
       .map((row, idx) => ({ row, idx }))
-      .filter(({ row }) => columnKeys.some((key) => String(row[key] || '').toLowerCase().includes(term)))
+      .filter(({ row }) =>
+        columnKeys.some((key) => String(row[key] || '').toLowerCase().includes(term))
+      )
       .map(({ idx }) => idx)
   }, [rows, search])
 
@@ -310,12 +414,30 @@ export default function RawDataInstall() {
             className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
           />
         </div>
+
         <button
           type="button"
-          onClick={handleAddRow}
-          className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          onClick={handleAddRowAtTop}
+          disabled={addingRow}
+          className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-60"
         >
-          <Plus size={14} />+ Add Row
+          {addingRow ? (
+            <>
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Adding…
+            </>
+          ) : (
+            '+ ADD ROW'
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={resetColumnWidths}
+          className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          <RotateCcw size={14} />
+          Reset Columns
         </button>
       </div>
 
@@ -325,20 +447,35 @@ export default function RawDataInstall() {
         <div className="w-full max-w-full overflow-hidden">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="max-h-[650px] overflow-auto">
-              <table className="w-full min-w-[4200px] border-collapse text-sm">
+              <table
+                className="border-collapse table-fixed text-sm"
+                style={{ width: totalTableWidth, minWidth: totalTableWidth }}
+              >
                 <thead className="sticky top-0 z-20 bg-gray-50">
                   <tr>
-                    <th className="border border-gray-200 whitespace-nowrap px-3 py-3 text-center text-xs font-bold uppercase text-gray-600">
+                    <th
+                      style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
+                      className="border border-gray-200 px-2 py-3 text-center text-xs font-bold uppercase text-gray-600"
+                    >
                       #
                     </th>
-                    {installRawDataColumns.map((col) => (
-                      <th
-                        key={col.key}
-                        className="border border-gray-200 whitespace-nowrap px-3 py-3 text-left text-xs font-bold uppercase text-gray-600"
-                      >
-                        {col.label}
-                      </th>
-                    ))}
+                    {installRawDataColumns.map((col) => {
+                      const w = columnWidths[col.key] || 140
+                      return (
+                        <th
+                          key={col.key}
+                          style={{ width: w, minWidth: w }}
+                          className="relative border border-gray-200 px-3 py-3 text-left text-xs font-bold uppercase text-gray-600"
+                        >
+                          <span className="block truncate pr-3">{col.label}</span>
+                          {/* Drag handle — pointer events only, does not interfere with text */}
+                          <div
+                            onPointerDown={(e) => handleColumnResizeStart(e, col.key)}
+                            className="absolute right-0 top-0 h-full w-2 cursor-col-resize select-none hover:bg-orange-400"
+                          />
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
@@ -347,46 +484,55 @@ export default function RawDataInstall() {
                     return (
                       <tr
                         key={row._rowNumber || `new-${rowIndex}`}
-                        className="hover:bg-orange-50/30"
+                        className="hover:bg-orange-50/40"
                       >
-                        <td className="border border-gray-100 px-3 py-1 text-center text-xs text-gray-400 align-middle bg-white">
+                        <td
+                          style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
+                          className="border border-gray-100 bg-white px-2 py-1 text-center text-xs text-gray-400 align-middle"
+                        >
                           {rowIndex + 1}
                         </td>
-                        {installRawDataColumns.map((col) => (
-                          <td key={col.key} className="border border-gray-100 p-0 align-middle bg-white">
-                            {col.key === 'uploadedGeotagging' ? (
-                              <select
-                                value={row.uploadedGeotagging || ''}
-                                onChange={(e) => {
-                                  const val = e.target.value
-                                  updateCell(rowIndex, 'uploadedGeotagging', val)
-                                  if (row._rowNumber) saveCell(row._rowNumber, 'uploadedGeotagging', val)
-                                }}
-                                className={`w-full min-w-[220px] border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getUploadedGeotaggingColor(row.uploadedGeotagging)}`}
-                              >
-                                <option value="">SELECT STATUS</option>
-                                {uploadedGeotaggingOptions.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                value={row[col.key] || ''}
-                                onChange={(e) => updateCell(rowIndex, col.key, e.target.value)}
-                                onBlur={() => saveRow(rowIndex)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') e.target.blur()
-                                }}
-                                onPaste={(e) => handlePaste(e, rowIndex, col.key)}
-                                className={`w-full ${
-                                  wideColumns.includes(col.key) ? 'min-w-[220px]' : 'min-w-[130px]'
-                                } bg-transparent border-0 outline-none px-2 py-1.5 text-sm focus:ring-2 focus:ring-inset focus:ring-orange-400`}
-                              />
-                            )}
-                          </td>
-                        ))}
+                        {installRawDataColumns.map((col) => {
+                          const w = columnWidths[col.key] || 140
+                          return (
+                            <td
+                              key={col.key}
+                              style={{ width: w, minWidth: w }}
+                              className="border border-gray-100 bg-white p-0 align-middle"
+                            >
+                              {col.key === 'uploadedGeotagging' ? (
+                                <select
+                                  value={row.uploadedGeotagging || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value
+                                    updateCell(rowIndex, 'uploadedGeotagging', val)
+                                    if (row._rowNumber)
+                                      saveCell(row._rowNumber, 'uploadedGeotagging', val)
+                                  }}
+                                  className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getUploadedGeotaggingColor(row.uploadedGeotagging)}`}
+                                >
+                                  <option value="">SELECT STATUS</option>
+                                  {uploadedGeotaggingOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  value={row[col.key] || ''}
+                                  onChange={(e) => updateCell(rowIndex, col.key, e.target.value)}
+                                  onBlur={() => saveRow(rowIndex)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') e.target.blur()
+                                  }}
+                                  onPaste={(e) => handlePaste(e, rowIndex, col.key)}
+                                  className="w-full border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400"
+                                />
+                              )}
+                            </td>
+                          )
+                        })}
                       </tr>
                     )
                   })}
