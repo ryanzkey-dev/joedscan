@@ -179,6 +179,20 @@ function addInstallRawDataRowAtTop(data) {
   return jsonResponse({ status: 'success', rowNumber: 2 })
 }
 
+// Optional: run once from the Apps Script editor to add dropdown validation for the
+// FOC TYPE column in Google Sheets. Column index is resolved dynamically. Not called automatically.
+function applyFocTypeValidation() {
+  const sheet = getInstallRawDataSheet()
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+  const focTypeIndex = headers.indexOf('FOC TYPE') + 1
+  if (focTypeIndex <= 0) return
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['PREFAB', 'REGULARFOC', 'REUSE'], true)
+    .setAllowInvalid(false)
+    .build()
+  sheet.getRange(2, focTypeIndex, Math.max(sheet.getMaxRows() - 1, 1), 1).setDataValidation(rule)
+}
+
 // Optional: run once from the Apps Script editor to add dropdown validation for Column D
 // (REMARKS 2) in Google Sheets. Not called automatically.
 function applyRemarks2StatusValidation() {

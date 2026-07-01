@@ -235,6 +235,18 @@ function getRemarks2StatusColor(status = '') {
   return colors[value] || 'bg-white text-gray-700'
 }
 
+const focTypeOptions = ['PREFAB', 'REGULARFOC', 'REUSE']
+
+function getFocTypeColor(status = '') {
+  const value = String(status).trim().toUpperCase()
+  const colors = {
+    'PREFAB': 'bg-gray-100 text-gray-800',
+    'REGULARFOC': 'bg-blue-100 text-blue-800',
+    'REUSE': 'bg-green-100 text-green-800',
+  }
+  return colors[value] || 'bg-white text-gray-700'
+}
+
 const ofscStatusOptions = [
   'CLOSED IN ORACLE',
   'NO END BUTTON',
@@ -868,6 +880,23 @@ export default function RawDataInstall() {
                                 >
                                   <option value="">SELECT TMS STATUS</option>
                                   {tmsStatusOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : col.key === 'focType' ? (
+                                <select
+                                  value={row.focType || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value
+                                    updateCell(rowIndex, 'focType', val)
+                                    if (row._rowNumber) saveCell(row._rowNumber, 'focType', val)
+                                  }}
+                                  className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getFocTypeColor(row.focType)}`}
+                                >
+                                  <option value="">SELECT FOC TYPE</option>
+                                  {focTypeOptions.map((option) => (
                                     <option key={option} value={option}>
                                       {option}
                                     </option>
