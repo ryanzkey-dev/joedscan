@@ -484,6 +484,13 @@ export default function RawDataInstall() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingRow, setAddingRow] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkRows, setBulkRows] = useState([
+    createEmptyInstallRawDataRow(),
+    createEmptyInstallRawDataRow(),
+    createEmptyInstallRawDataRow(),
+  ])
+  const [submittingBulk, setSubmittingBulk] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [search, setSearch] = useState('')
@@ -607,6 +614,98 @@ export default function RawDataInstall() {
       setError(err.message)
     } finally {
       setAddingRow(false)
+    }
+  }
+
+  const openBulkModal = () => {
+    setBulkRows([
+      createEmptyInstallRawDataRow(),
+      createEmptyInstallRawDataRow(),
+      createEmptyInstallRawDataRow(),
+    ])
+    setShowBulkModal(true)
+  }
+
+  const closeBulkModal = () => setShowBulkModal(false)
+
+  const updateBulkCell = (rowIndex, key, value) => {
+    setBulkRows((prev) => {
+      const updated = [...prev]
+      updated[rowIndex] = { ...updated[rowIndex], [key]: value }
+      return updated
+    })
+  }
+
+  const addBulkRow = () => setBulkRows((prev) => [...prev, createEmptyInstallRawDataRow()])
+
+  const addTenBulkRows = () =>
+    setBulkRows((prev) => [...prev, ...Array.from({ length: 10 }, createEmptyInstallRawDataRow)])
+
+  const clearBulkRows = () =>
+    setBulkRows([
+      createEmptyInstallRawDataRow(),
+      createEmptyInstallRawDataRow(),
+      createEmptyInstallRawDataRow(),
+    ])
+
+  const handleBulkPaste = (e, startRowIndex, startColumnKey) => {
+    e.preventDefault()
+    const pastedText = e.clipboardData.getData('text')
+    const pastedRows = pastedText
+      .trim()
+      .split(/\r?\n/)
+      .map((row) => row.split('\t'))
+
+    const startColumnIndex = columnKeys.indexOf(startColumnKey)
+    if (startColumnIndex === -1) return
+
+    setBulkRows((prevRows) => {
+      const updatedRows = [...prevRows]
+      pastedRows.forEach((rowData, rowOffset) => {
+        const targetRowIndex = startRowIndex + rowOffset
+        while (updatedRows.length <= targetRowIndex) {
+          updatedRows.push(createEmptyInstallRawDataRow())
+        }
+        rowData.forEach((cellValue, colOffset) => {
+          const targetColumnKey = columnKeys[startColumnIndex + colOffset]
+          if (targetColumnKey) {
+            updatedRows[targetRowIndex] = {
+              ...updatedRows[targetRowIndex],
+              [targetColumnKey]: cellValue.trim(),
+            }
+          }
+        })
+      })
+      return updatedRows
+    })
+  }
+
+  const isEmptyRawDataRow = (row) =>
+    installRawDataColumns.every((col) => !String(row[col.key] || '').trim())
+
+  const submitBulkRows = async () => {
+    const validRows = bulkRows.filter((row) => !isEmptyRawDataRow(row))
+    if (!validRows.length) {
+      setError('No data to submit.')
+      return
+    }
+    setSubmittingBulk(true)
+    setError('')
+    try {
+      await apiRequest('bulkAddInstallRawDataRowsAtTop', { rows: validRows })
+      closeBulkModal()
+      const res = await apiRequest('getInstallRawData')
+      const fetched = res.rows || []
+      setRows(
+        fetched.length > 0
+          ? fetched
+          : Array.from({ length: DEFAULT_ROW_COUNT }, createEmptyInstallRawDataRow)
+      )
+      flashSuccess()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmittingBulk(false)
     }
   }
 
@@ -753,6 +852,14 @@ export default function RawDataInstall() {
           ) : (
             '+ ADD ROW'
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={openBulkModal}
+          className="inline-flex items-center gap-2 rounded-lg border border-orange-400 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 hover:bg-orange-100"
+        >
+          BULK ADD / PASTE DATA
         </button>
       </div>
 
@@ -921,6 +1028,204 @@ export default function RawDataInstall() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk Add Modal ── */}
+      {showBulkModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-8">
+          <div className="flex w-full max-w-[96vw] flex-col rounded-xl bg-white shadow-xl" style={{ maxHeight: '92vh' }}>
+            {/* Header */}
+            <div className="flex items-start justify-between border-b px-5 py-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">Bulk Add Raw Data</h2>
+                <p className="mt-0.5 text-sm text-gray-500">
+                  Copy data from Excel or Google Sheets and paste it directly into the table. Rows will auto-expand.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeBulkModal}
+                className="ml-4 rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Staging table */}
+            <div className="flex-1 overflow-auto">
+              <table
+                className="border-collapse table-fixed text-sm"
+                style={{ width: totalTableWidth, minWidth: totalTableWidth }}
+              >
+                <thead className="sticky top-0 z-10 bg-gray-50">
+                  <tr>
+                    <th
+                      style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
+                      className="border border-gray-200 px-2 py-2.5 text-center text-xs font-bold uppercase text-gray-600"
+                    >
+                      #
+                    </th>
+                    {installRawDataColumns.map((col) => {
+                      const w = columnWidths[col.key] || 140
+                      return (
+                        <th
+                          key={col.key}
+                          style={{ width: w, minWidth: w }}
+                          className="border border-gray-200 px-3 py-2.5 text-left text-xs font-bold uppercase text-gray-600"
+                        >
+                          {col.label}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bulkRows.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-orange-50/30">
+                      <td
+                        style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
+                        className="border border-gray-100 bg-white px-2 py-1 text-center text-xs text-gray-400 align-middle"
+                      >
+                        {rowIndex + 1}
+                      </td>
+                      {installRawDataColumns.map((col) => {
+                        const w = columnWidths[col.key] || 140
+                        return (
+                          <td
+                            key={col.key}
+                            style={{ width: w, minWidth: w }}
+                            className="border border-gray-100 bg-white p-0 align-middle"
+                          >
+                            {col.key === 'uploadedGeotagging' ? (
+                              <select
+                                value={row.uploadedGeotagging || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, 'uploadedGeotagging', e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getUploadedGeotaggingColor(row.uploadedGeotagging)}`}
+                              >
+                                <option value="">SELECT STATUS</option>
+                                {uploadedGeotaggingOptions.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : col.key === 'remarks2' ? (
+                              <select
+                                value={row.remarks2 || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, 'remarks2', e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getRemarks2StatusColor(row.remarks2)}`}
+                              >
+                                <option value="">SELECT REMARKS 2 STATUS</option>
+                                {remarks2StatusOptions.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : col.key === 'ofsc' ? (
+                              <select
+                                value={row.ofsc || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, 'ofsc', e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getOfscStatusColor(row.ofsc)}`}
+                              >
+                                <option value="">SELECT OFSC STATUS</option>
+                                {ofscStatusOptions.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : col.key === 'tms' ? (
+                              <select
+                                value={row.tms || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, 'tms', e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getTmsStatusColor(row.tms)}`}
+                              >
+                                <option value="">SELECT TMS STATUS</option>
+                                {tmsStatusOptions.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : col.key === 'focType' ? (
+                              <select
+                                value={row.focType || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, 'focType', e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getFocTypeColor(row.focType)}`}
+                              >
+                                <option value="">SELECT FOC TYPE</option>
+                                {focTypeOptions.map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                value={row[col.key] || ''}
+                                onChange={(e) => updateBulkCell(rowIndex, col.key, e.target.value)}
+                                onPaste={(e) => handleBulkPaste(e, rowIndex, col.key)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
+                                className="w-full border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400"
+                              />
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between border-t px-5 py-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={addBulkRow}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  + Add Row
+                </button>
+                <button
+                  type="button"
+                  onClick={addTenBulkRows}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  + Add 10 Rows
+                </button>
+                <button
+                  type="button"
+                  onClick={clearBulkRows}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={closeBulkModal}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitBulkRows}
+                  disabled={submittingBulk}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-orange-500 px-4 py-1.5 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-60"
+                >
+                  {submittingBulk ? (
+                    <>
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Submitting…
+                    </>
+                  ) : (
+                    'Submit All'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

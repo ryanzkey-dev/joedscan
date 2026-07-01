@@ -82,6 +82,8 @@ function routeInstallRawDataAction(action, data) {
       return addInstallRawDataRows(data)
     case 'addInstallRawDataRowAtTop':
       return addInstallRawDataRowAtTop(data)
+    case 'bulkAddInstallRawDataRowsAtTop':
+      return bulkAddInstallRawDataRowsAtTop(data)
     default:
       return jsonResponse({ status: 'error', message: 'Unknown action: ' + action })
   }
@@ -331,6 +333,28 @@ function applyUploadedGeotaggingValidation() {
     .setAllowInvalid(false)
     .build()
   sheet.getRange('A2:A').setDataValidation(rule)
+}
+
+function bulkAddInstallRawDataRowsAtTop(data) {
+  const sheet = getInstallRawDataSheet()
+  const rows = data.rows || []
+  if (!rows.length) return jsonResponse({ status: 'error', message: 'No rows to add.' })
+
+  sheet.insertRowsAfter(1, rows.length)
+
+  const values = rows.map((row) => INSTALL_RAW_DATA_KEYS.map((key) => row[key] || ''))
+  sheet.getRange(2, 1, values.length, INSTALL_RAW_DATA_KEYS.length).setValues(values)
+
+  rows.forEach((row, i) => {
+    INSTALL_RAW_DATA_TEXT_FORCED_KEYS.forEach((key) => {
+      if (row[key]) {
+        const colIndex = INSTALL_RAW_DATA_KEYS.indexOf(key)
+        sheet.getRange(i + 2, colIndex + 1).setNumberFormat('@').setValue(row[key])
+      }
+    })
+  })
+
+  return jsonResponse({ status: 'success', addedCount: rows.length })
 }
 
 function addInstallRawDataRows(data) {
