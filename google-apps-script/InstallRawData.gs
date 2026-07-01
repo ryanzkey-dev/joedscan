@@ -179,6 +179,53 @@ function addInstallRawDataRowAtTop(data) {
   return jsonResponse({ status: 'success', rowNumber: 2 })
 }
 
+// Optional: run once from the Apps Script editor to add dropdown validation for Column C
+// (OFSC) in Google Sheets. Not called automatically.
+function applyOfscStatusValidation() {
+  const sheet = getInstallRawDataSheet()
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(
+      [
+        'CLOSED IN ORACLE',
+        'NO END BUTTON',
+        'ACTIVATION REQUESTED',
+        'NOT DONE',
+        'HANDLED BY OTHER BP',
+        'DONE BOOKED',
+        'UNATTENDED',
+        'ON GOING INSTALL',
+        'SURVEY INSTALLABLE',
+        'SURVEY RPR',
+        'BK INSTALLED',
+        'SME/CBG INSTALLED',
+        'DONE BK INSTALL',
+        'CLOSE WITH IPTV PENDING',
+        'BK INSTALLED W/ IPTV',
+        'FOR SURVEY',
+        'DUPLICATE',
+        'SURVEY UNATTENDED',
+        'FOR CLOSING',
+        'ON GOING/TRACKROLL',
+        'RESCHED W/ IN THE DAY',
+        'WAITING MATERIALS',
+        'AWAITING PROJECT COMP',
+        'WITHDRAW MATERIALS',
+        'ON GOING/TOK WITH SUBS',
+        'HANDLE BY FH',
+        'FOR REIMP',
+        'ACTIVATED ON ACTUAL',
+        'FOR CLOSING ORACLE(ORACLE ERROR)',
+        'FOR PULL OUT',
+        'DONE PULL OUT',
+        'FOR CLOSING ORACLE (ACTIVATED ON ACTUAL)',
+      ],
+      true
+    )
+    .setAllowInvalid(false)
+    .build()
+  sheet.getRange('C2:C').setDataValidation(rule)
+}
+
 // Optional: run once from the Apps Script editor to add dropdown validation for Column B
 // (TMS) in Google Sheets. Not called automatically.
 function applyTmsStatusValidation() {

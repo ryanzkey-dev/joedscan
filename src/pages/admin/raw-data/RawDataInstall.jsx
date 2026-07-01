@@ -53,6 +53,80 @@ function getTmsStatusColor(status = '') {
   return colors[value] || 'bg-white text-gray-700'
 }
 
+const ofscStatusOptions = [
+  'CLOSED IN ORACLE',
+  'NO END BUTTON',
+  'ACTIVATION REQUESTED',
+  'NOT DONE',
+  'HANDLED BY OTHER BP',
+  'DONE BOOKED',
+  'UNATTENDED',
+  'ON GOING INSTALL',
+  'SURVEY INSTALLABLE',
+  'SURVEY RPR',
+  'BK INSTALLED',
+  'SME/CBG INSTALLED',
+  'DONE BK INSTALL',
+  'CLOSE WITH IPTV PENDING',
+  'BK INSTALLED W/ IPTV',
+  'FOR SURVEY',
+  'DUPLICATE',
+  'SURVEY UNATTENDED',
+  'FOR CLOSING',
+  'ON GOING/TRACKROLL',
+  'RESCHED W/ IN THE DAY',
+  'WAITING MATERIALS',
+  'AWAITING PROJECT COMP',
+  'WITHDRAW MATERIALS',
+  'ON GOING/TOK WITH SUBS',
+  'HANDLE BY FH',
+  'FOR REIMP',
+  'ACTIVATED ON ACTUAL',
+  'FOR CLOSING ORACLE(ORACLE ERROR)',
+  'FOR PULL OUT',
+  'DONE PULL OUT',
+  'FOR CLOSING ORACLE (ACTIVATED ON ACTUAL)',
+]
+
+function getOfscStatusColor(status = '') {
+  const value = String(status).trim().toUpperCase()
+  const colors = {
+    'CLOSED IN ORACLE': 'bg-gray-200 text-gray-900',
+    'NO END BUTTON': 'bg-red-100 text-red-700',
+    'ACTIVATION REQUESTED': 'bg-blue-100 text-blue-800',
+    'NOT DONE': 'bg-red-100 text-red-800',
+    'HANDLED BY OTHER BP': 'bg-gray-100 text-gray-900',
+    'DONE BOOKED': 'bg-green-100 text-green-800',
+    'UNATTENDED': 'bg-gray-700 text-white',
+    'ON GOING INSTALL': 'bg-blue-100 text-blue-800',
+    'SURVEY INSTALLABLE': 'bg-emerald-100 text-emerald-800',
+    'SURVEY RPR': 'bg-orange-100 text-orange-800',
+    'BK INSTALLED': 'bg-green-100 text-green-800',
+    'SME/CBG INSTALLED': 'bg-green-100 text-green-800',
+    'DONE BK INSTALL': 'bg-yellow-300 text-yellow-900',
+    'CLOSE WITH IPTV PENDING': 'bg-purple-100 text-purple-800',
+    'BK INSTALLED W/ IPTV': 'bg-green-100 text-green-800',
+    'FOR SURVEY': 'bg-sky-100 text-sky-800',
+    'DUPLICATE': 'bg-gray-100 text-gray-800',
+    'SURVEY UNATTENDED': 'bg-orange-100 text-orange-800',
+    'FOR CLOSING': 'bg-indigo-100 text-indigo-800',
+    'ON GOING/TRACKROLL': 'bg-blue-100 text-blue-800',
+    'RESCHED W/ IN THE DAY': 'bg-yellow-100 text-yellow-800',
+    'WAITING MATERIALS': 'bg-amber-100 text-amber-800',
+    'AWAITING PROJECT COMP': 'bg-purple-100 text-purple-800',
+    'WITHDRAW MATERIALS': 'bg-red-100 text-red-800',
+    'ON GOING/TOK WITH SUBS': 'bg-purple-200 text-purple-900',
+    'HANDLE BY FH': 'bg-slate-100 text-slate-800',
+    'FOR REIMP': 'bg-orange-100 text-orange-800',
+    'ACTIVATED ON ACTUAL': 'bg-green-100 text-green-800',
+    'FOR CLOSING ORACLE(ORACLE ERROR)': 'bg-red-100 text-red-800',
+    'FOR PULL OUT': 'bg-red-100 text-red-800',
+    'DONE PULL OUT': 'bg-green-100 text-green-800',
+    'FOR CLOSING ORACLE (ACTIVATED ON ACTUAL)': 'bg-emerald-100 text-emerald-800',
+  }
+  return colors[value] || 'bg-white text-gray-700'
+}
+
 const uploadedGeotaggingOptions = [
   'DONE UPLOAD',
   'PENDING',
@@ -561,6 +635,23 @@ export default function RawDataInstall() {
                                 >
                                   <option value="">SELECT STATUS</option>
                                   {uploadedGeotaggingOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : col.key === 'ofsc' ? (
+                                <select
+                                  value={row.ofsc || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value
+                                    updateCell(rowIndex, 'ofsc', val)
+                                    if (row._rowNumber) saveCell(row._rowNumber, 'ofsc', val)
+                                  }}
+                                  className={`w-full border-0 px-2 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400 ${getOfscStatusColor(row.ofsc)}`}
+                                >
+                                  <option value="">SELECT OFSC STATUS</option>
+                                  {ofscStatusOptions.map((option) => (
                                     <option key={option} value={option}>
                                       {option}
                                     </option>
